@@ -1178,5 +1178,9 @@
 #define USE_GENERIC_EVENT_LOOP 1
 #endif
 #endif
+#if !defined(ENABLE_LINUX_PERF_MAP)
+#define ENABLE_LINUX_PERF_MAP 1
+#endif
+
 
 #endif /* WTF_Platform_h */

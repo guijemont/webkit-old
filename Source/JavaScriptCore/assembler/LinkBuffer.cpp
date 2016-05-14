@@ -85,6 +85,16 @@ LinkBuffer::CodeRef LinkBuffer::finalizeCodeWithDisassembly(const char* format, 
     return result;
 }
 
+#if ENABLE(LINUX_PERF_MAP)
+void LinkBuffer::addPerfMapEntry(const char* format, ...)
+{
+    va_list argList;
+    va_start(argList, format);
+    m_vm->addPerfMapEntry(m_code, m_size, format, argList);
+    va_end(argList);
+}
+#endif
+
 #if ENABLE(BRANCH_COMPACTION)
 static ALWAYS_INLINE void recordLinkOffsets(AssemblerData& assemblerData, int32_t regionStart, int32_t regionEnd, int32_t offset)
 {

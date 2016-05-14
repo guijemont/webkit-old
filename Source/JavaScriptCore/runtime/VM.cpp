@@ -328,6 +328,15 @@ VM::VM(VMType vmType, HeapType heapType)
         Watchdog& watchdog = ensureWatchdog();
         watchdog.setTimeLimit(timeoutMillis);
     }
+
+#if ENABLE(LINUX_PERF_MAP)
+    {
+        int pid = getCurrentProcessID();
+        String path = String::format("/tmp/perf-%d.map", pid);
+        m_perfMap = FilePrintStream::open(path.utf8().data(), "w");
+        setlinebuf(m_perfMap->file());
+    }
+#endif
 }
 
 VM::~VM()
@@ -843,5 +852,21 @@ void sanitizeStackForVM(VM* vm)
     sanitizeStackForVMImpl(vm);
 #endif
 }
+
+
+#if ENABLE(LINUX_PERF_MAP)
+void VM::addPerfMapEntry(void *addr, size_t size, const char *format, va_list argList)
+{
+    if (m_perfMap) {
+#if USE(JSVALUE32_64)
+        m_perfMap->printf("%x %x ", (unsigned int) addr, size);
+#else
+        m_perfMap->printf("%lx %lx ", (unsigned long int) addr, size);
+#endif
+        m_perfMap->vprintf(format, argList);
+        m_perfMap->printf("\n");
+    }
+}
+#endif
 
 } // namespace JSC

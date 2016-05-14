@@ -261,6 +261,10 @@ public:
 
     VM& vm() { return *m_vm; }
 
+#if ENABLE(LINUX_PERF_MAP)
+    void addPerfMapEntry(const char *format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
+#endif
+
 private:
 #if ENABLE(BRANCH_COMPACTION)
     int executableOffsetFor(int location)
@@ -320,10 +324,19 @@ private:
     Vector<RefPtr<SharedTask<void(LinkBuffer&)>>> m_linkTasks;
 };
 
+#if ENABLE(LINUX_PERF_MAP)
+#define FINALIZE_CODE_IF(condition, linkBufferReference, dataLogFArgumentsForHeading)  \
+    (((linkBufferReference).addPerfMapEntry dataLogFArgumentsForHeading), \
+     (UNLIKELY((condition))                                              \
+     ? ((linkBufferReference).finalizeCodeWithDisassembly dataLogFArgumentsForHeading) \
+     : (linkBufferReference).finalizeCodeWithoutDisassembly()))
+#else
 #define FINALIZE_CODE_IF(condition, linkBufferReference, dataLogFArgumentsForHeading)  \
     (UNLIKELY((condition))                                              \
      ? ((linkBufferReference).finalizeCodeWithDisassembly dataLogFArgumentsForHeading) \
      : (linkBufferReference).finalizeCodeWithoutDisassembly())
+#endif
+
 
 bool shouldDumpDisassemblyFor(CodeBlock*);
 

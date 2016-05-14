@@ -614,6 +614,10 @@ public:
     template<typename Func>
     void logEvent(CodeBlock*, const char* summary, const Func& func);
 
+#if ENABLE(LINUX_PERF_MAP)
+    void addPerfMapEntry(void *addr, size_t size, const char *format, va_list argList) WTF_ATTRIBUTE_PRINTF (4, 0);
+#endif
+
 private:
     friend class LLIntOffsetsExtractor;
     friend class ClearExceptionScope;
@@ -680,6 +684,9 @@ private:
 #endif
     std::unique_ptr<ShadowChicken> m_shadowChicken;
     std::unique_ptr<BytecodeIntrinsicRegistry> m_bytecodeIntrinsicRegistry;
+#if ENABLE(LINUX_PERF_MAP)
+    std::unique_ptr<FilePrintStream> m_perfMap;
+#endif
 };
 
 #if ENABLE(GC_VALIDATION)
