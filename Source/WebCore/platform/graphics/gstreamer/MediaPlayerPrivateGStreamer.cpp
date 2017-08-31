@@ -29,6 +29,7 @@
 #if ENABLE(VIDEO) && USE(GSTREAMER)
 
 #include "GStreamerUtilities.h"
+#include "JSDOMWindowBase.h"
 #include "URL.h"
 #include "MIMETypeRegistry.h"
 #include "MediaPlayer.h"
@@ -71,6 +72,8 @@
 #if ENABLE(WEB_AUDIO)
 #include "AudioSourceProviderGStreamer.h"
 #endif
+
+#include <iostream>
 
 GST_DEBUG_CATEGORY_EXTERN(webkit_media_player_debug);
 #define GST_CAT_DEFAULT webkit_media_player_debug
@@ -1100,6 +1103,10 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
     case GST_MESSAGE_STATE_CHANGED: {
         gst_message_parse_state_changed(message, &currentState, &newState, 0);
         GST_TRACE("State changed %s --> %s", gst_element_state_get_name(currentState), gst_element_state_get_name(newState));
+        if (messageSourceIsPlaybin && newState == GST_STATE_READY) {
+            JSDOMWindowBase::commonVM().stopPerf();
+            std::cerr << "####### We're playing! #######" << std::endl;
+        }
 
 #if USE(FUSION_SINK)
         if (g_strstr_len(GST_MESSAGE_SRC_NAME(message), 9, "h264parse")) {

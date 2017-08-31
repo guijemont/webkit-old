@@ -634,6 +634,9 @@ public:
     template<typename Func>
     void logEvent(CodeBlock*, const char* summary, const Func& func);
 
+    void startPerf();
+    void stopPerf();
+
 private:
     friend class LLIntOffsetsExtractor;
 
@@ -742,6 +745,7 @@ private:
     friend class CatchScope;
     friend class ExceptionScope;
     friend class ThrowScope;
+    pid_t m_perfPid { 0 };
 };
 
 #if ENABLE(GC_VALIDATION)

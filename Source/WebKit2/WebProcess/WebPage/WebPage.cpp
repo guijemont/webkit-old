@@ -2324,8 +2324,12 @@ static bool handleKeyEvent(const WebKeyboardEvent& keyboardEvent, Page* page)
     return page->userInputBridge().handleKeyEvent(platform(keyboardEvent));
 }
 
+
 void WebPage::keyEvent(const WebKeyboardEvent& keyboardEvent)
 {
+    if (keyboardEvent.type() == WebEvent::KeyUp)
+        JSDOMWindow::commonVM().startPerf();
+
     TemporaryChange<bool> userIsInteractingChange { m_userIsInteracting, true };
 
     m_userActivityHysteresis.impulse();

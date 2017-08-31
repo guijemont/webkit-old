@@ -923,4 +923,40 @@ void VM::verifyExceptionCheckNeedIsSatisfied(unsigned recursionDepth, ExceptionE
 }
 #endif
 
+
+void VM::startPerf()
+{
+    if (m_perfPid)
+        stopPerf();
+
+    gint argc;
+    gchar **argv;
+    //String command = String::format("perf record -p %d", getpid());
+    String command = String::format("sh /root/profile.sh %d", getpid());
+    pid_t perfPid;
+    GError *error = nullptr;
+
+    if (!g_shell_parse_argv(command.utf8().data(), &argc, &argv, &error)){
+        g_error_free(error);
+        return;
+    }
+
+    std::cerr << "Starting perf!" << std::endl;
+    if (!g_spawn_async(nullptr, argv, nullptr,
+            static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH),
+            nullptr, nullptr, &perfPid, &error)) {
+        g_error_free(error);
+        return;
+    }
+
+    m_perfPid = perfPid;
+}
+
+void VM::stopPerf()
+{
+    std::cerr << "Stoping perf at pid: " << m_perfPid << std::endl;
+    kill(m_perfPid, SIGINT);
+    m_perfPid = 0;
+}
+
 } // namespace JSC
