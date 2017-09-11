@@ -46,6 +46,7 @@ void executeProbe(State* state)
     state->initializeStackArg = nullptr;
     state->probeFunction(context);
 
+// FIXME: do the same on MIPS
 #if CPU(ARM64)
     // The ARM64 probe trampoline does not support changing both lr and pc.
     RELEASE_ASSERT(originalPC == cpu.pc() || originalLR == cpu.gpr<void*>(ARM64Registers::lr));
