@@ -30,7 +30,6 @@
 
 #include "CryptoKeyPair.h"
 #include "JsonWebKey.h"
-#include <array>
 #include <pal/crypto/gcrypt/ASN1.h>
 #include <pal/crypto/gcrypt/Handle.h>
 #include <pal/crypto/gcrypt/Utilities.h>
