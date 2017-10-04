@@ -46,30 +46,6 @@ namespace WTF {
 static const size_t ramSizeGuess = 512 * MB;
 #endif
 
-static size_t customRAMSize()
-{
-    // Syntax: Case insensitive, unit multipliers (M=Mb, K=Kb, <empty>=bytes).
-    // Example: WPE_RAM_SIZE='500M'
-
-    String s(getenv("WPE_RAM_SIZE"));
-    if (!s.isEmpty()) {
-        String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
-        size_t units = 1;
-        if (value.endsWith('k'))
-            units = 1024;
-        else if (value.endsWith('m'))
-            units = 1024 * 1024;
-        if (units != 1)
-            value = value.substring(0, value.length()-1);
-        bool ok = false;
-        size_t size = size_t(value.toUInt64(&ok));
-        if (ok)
-            return size * units;
-    }
-
-    return 0;
-}
-
 static size_t computeRAMSize()
 {
 #if OS(WINDOWS)
