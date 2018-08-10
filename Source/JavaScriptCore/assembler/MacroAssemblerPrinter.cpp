@@ -137,6 +137,10 @@ void printMemory(PrintStream& out, Context& context)
             out.printf("%p:<0x%02x %d>", p, *p, *p);
             return;
         }
+        // assuming memory is not malformed, it originately pointed to a value
+        // of the required size, which should be properly aligned on platforms
+        // that require it.
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         if (memory.numBytes == sizeof(int16_t)) {
             auto p = reinterpret_cast<int16_t*>(ptr);
             out.printf("%p:<0x%04x %d>", p, *p, *p);
@@ -152,6 +156,7 @@ void printMemory(PrintStream& out, Context& context)
             out.printf("%p:<0x%016" PRIx64 " %" PRId64 ">", p, *p, *p);
             return;
         }
+        IGNORE_CAST_ALIGN_WARNINGS_END
         // Else, unknown word size. Fall thru and dump in the generic way.
     }
 

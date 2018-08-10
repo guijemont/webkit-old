@@ -1461,8 +1461,16 @@ static CodeBlock* codeBlockFromArg(ExecState* exec)
                 candidateCodeBlock = nullptr;
             else
                 candidateCodeBlock = func->jsExecutable()->eitherCodeBlock();
-        } else
+        } else {
+            // Here it's OK to ignore the alignment requirements since
+            // candidateCodeBlock will only be accessed if
+            // VMInspector::isValidCodeBlock() returns true, which only happens
+            // if the address is that of a known existing, properly aligned
+            // codeBlock.
+            IGNORE_CAST_ALIGN_WARNINGS_BEGIN
             candidateCodeBlock = reinterpret_cast<CodeBlock*>(value.asCell());
+            IGNORE_CAST_ALIGN_WARNINGS_END
+        }
     }
 
     if (candidateCodeBlock && VMInspector::isValidCodeBlock(exec, candidateCodeBlock))

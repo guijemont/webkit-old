@@ -1547,7 +1547,13 @@ JSBigInt* JSBigInt::parseInt(ExecState* exec, VM& vm, CharType* data, unsigned l
 
 inline JSBigInt::Digit* JSBigInt::dataStorage()
 {
+    // offsetOfData() makes sure that its return value is aligned to the size of
+    // Digit, so even though we cast to char* for pointer arithmetics, the cast to
+    // Digit* is properly aligned, though the compiler doesn't know about it,
+    // therefore we disable this warning.
+    IGNORE_CAST_ALIGN_WARNINGS_BEGIN
     return reinterpret_cast<Digit*>(reinterpret_cast<char*>(this) + offsetOfData());
+    IGNORE_CAST_ALIGN_WARNINGS_END
 }
 
 inline JSBigInt::Digit JSBigInt::digit(unsigned n)

@@ -1,3 +1,19 @@
+2018-09-05  Guillaume Emont  <guijemont@igalia.com>
+
+        [JSC] Remove gcc warnings on mips and armv7
+        https://bugs.webkit.org/show_bug.cgi?id=188598
+
+        Reviewed by NOBODY (OOPS!).
+
+        Use IGNORE_CAST_ALIGN_WARNINGS_BEGIN/END to allow some casts after
+        pointer calculations without triggering alignment warnings on mips and
+        armv7.
+
+        * bmalloc/IsoDirectoryPageInlines.h:
+        (bmalloc::IsoDirectoryPage<Config>::pageFor):
+        * bmalloc/IsoPageInlines.h:
+        (bmalloc::IsoPage<Config>::startAllocating):
+
 2018-10-12  Ryan Haddad  <ryanhaddad@apple.com>
 
         Unreviewed, rolling out r237063.

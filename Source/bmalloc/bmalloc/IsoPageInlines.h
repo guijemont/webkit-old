@@ -188,7 +188,20 @@ FreeList IsoPage<Config>::startAllocating()
         char* cellByte = reinterpret_cast<char*>(this) + index * Config::objectSize;
         if (verbose)
             fprintf(stderr, "%p: putting %p on free list.\n", this, cellByte);
+
+#if CPU(ARM) || CPU(MIPS)
+        // the cast below is safe on these platforms as long as
+        // both Config::objectSize and the alignment of this are multiples of
+        // the required alignment of FreeCell
+        static_assert(!(Config::objectSize % alignof(FreeCell)), "Config::objectSize should respect alignment of FreeCell");
+        static_assert(!(alignof(IsoPage<Config>) % alignof(FreeCell)), "Alignment of IsoPage<Config> should match that of FreeCell");
+
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
+#endif
         FreeCell* cell = reinterpret_cast<FreeCell*>(cellByte);
+#if CPU(ARM) || CPU(MIPS)
+        IGNORE_CAST_ALIGN_WARNINGS_END
+#endif
         cell->setNext(head, secret);
         head = cell;
         bytes += Config::objectSize;

@@ -1,3 +1,44 @@
+2018-09-05  Guillaume Emont  <guijemont@igalia.com>
+
+        [JSC] Remove gcc warnings on mips and armv7
+        https://bugs.webkit.org/show_bug.cgi?id=188598
+
+        Reviewed by NOBODY (OOPS!).
+
+        Remove many gcc/clang warnings that are false positives, mostly
+        alignment issues.
+
+        * assembler/MacroAssemblerPrinter.cpp:
+        (JSC::Printer::printMemory): a Memory keeps size information, so we
+        know the original value was of the same size and can ignore the
+        -Wcast-align warning.
+        * assembler/testmasm.cpp:
+        (JSC::floatOperands): marked as potentially unused as it is not used
+        on all platforms.
+        (JSC::testProbeModifiesStackValues): modifiedFlags is not used on
+        mips, so don't declare it.
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::executeProgram):
+        (JSC::Interpreter::executeCall):
+        (JSC::Interpreter::executeConstruct):
+        (JSC::Interpreter::prepareForRepeatCall):
+        (JSC::Interpreter::execute):
+        (JSC::Interpreter::executeModuleProgram):
+        The prepareForExecution() method either returns nullptr or an
+        Exception* cast to a JSObject*. It is therefore safe to cast it back
+        to Exception* even though it has stricter alignment requirements.
+        * jit/JITOperations.cpp:
+        Same as for Interpreter.cpp.
+        * runtime/JSBigInt.cpp:
+        (JSC::JSBigInt::dataStorage):
+        Pointer arithmetics done correctly, but gcc doesn't understand this,
+        so we ignore -Wcast-align
+        * tools/JSDollarVM.cpp:
+        (JSC::codeBlockFromArg):
+        After the cast, a check is done to make sure that the pointer is to a
+        known CodeBlock before using it, so if the result is badly aligned it
+        won't be used anyways.
+
 2018-10-16  Devin Rousso  <drousso@apple.com>
 
         Web Inspector: Canvas: capture previously saved states and add them to the recording payload

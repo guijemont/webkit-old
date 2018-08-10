@@ -807,7 +807,9 @@ failedJSONP:
     {
         CodeBlock* tempCodeBlock;
         JSObject* error = program->prepareForExecution<ProgramExecutable>(vm, nullptr, scope, CodeForCall, tempCodeBlock);
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(error));
+        IGNORE_CAST_ALIGN_WARNINGS_END
         if (UNLIKELY(error))
             return checkedReturn(error);
         codeBlock = jsCast<ProgramCodeBlock*>(tempCodeBlock);
@@ -865,7 +867,9 @@ JSValue Interpreter::executeCall(CallFrame* callFrame, JSObject* function, CallT
     if (isJSCall) {
         // Compile the callee:
         JSObject* compileError = callData.js.functionExecutable->prepareForExecution<FunctionExecutable>(vm, jsCast<JSFunction*>(function), scope, CodeForCall, newCodeBlock);
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(compileError));
+        IGNORE_CAST_ALIGN_WARNINGS_END
         if (UNLIKELY(!!compileError))
             return checkedReturn(compileError);
 
@@ -932,7 +936,9 @@ JSObject* Interpreter::executeConstruct(CallFrame* callFrame, JSObject* construc
     if (isJSConstruct) {
         // Compile the callee:
         JSObject* compileError = constructData.js.functionExecutable->prepareForExecution<FunctionExecutable>(vm, jsCast<JSFunction*>(constructor), scope, CodeForConstruct, newCodeBlock);
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(compileError));
+        IGNORE_CAST_ALIGN_WARNINGS_END
         if (UNLIKELY(!!compileError))
             return checkedReturn(compileError);
 
@@ -980,7 +986,9 @@ CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionE
     // Compile the callee:
     CodeBlock* newCodeBlock;
     JSObject* error = functionExecutable->prepareForExecution<FunctionExecutable>(vm, function, scope, CodeForCall, newCodeBlock);
+    IGNORE_CAST_ALIGN_WARNINGS_BEGIN
     EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(error));
+    IGNORE_CAST_ALIGN_WARNINGS_END
     if (UNLIKELY(error))
         return CallFrameClosure();
     newCodeBlock->m_shouldAlwaysBeInlined = false;
@@ -1038,7 +1046,9 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
     {
         CodeBlock* tempCodeBlock;
         JSObject* compileError = eval->prepareForExecution<EvalExecutable>(vm, nullptr, scope, CodeForCall, tempCodeBlock);
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(compileError));
+        IGNORE_CAST_ALIGN_WARNINGS_END
         if (UNLIKELY(!!compileError))
             return checkedReturn(compileError);
         codeBlock = jsCast<EvalCodeBlock*>(tempCodeBlock);
@@ -1161,7 +1171,9 @@ JSValue Interpreter::executeModuleProgram(ModuleProgramExecutable* executable, C
     {
         CodeBlock* tempCodeBlock;
         JSObject* compileError = executable->prepareForExecution<ModuleProgramExecutable>(vm, nullptr, scope, CodeForCall, tempCodeBlock);
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         EXCEPTION_ASSERT(throwScope.exception() == reinterpret_cast<Exception*>(compileError));
+        IGNORE_CAST_ALIGN_WARNINGS_END
         if (UNLIKELY(!!compileError))
             return checkedReturn(compileError);
         codeBlock = jsCast<ModuleProgramCodeBlock*>(tempCodeBlock);

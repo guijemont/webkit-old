@@ -1,3 +1,16 @@
+2018-09-05  Guillaume Emont  <guijemont@igalia.com>
+
+        [JSC] Remove gcc warnings on mips and armv7
+        https://bugs.webkit.org/show_bug.cgi?id=188598
+
+        Reviewed by NOBODY (OOPS!).
+
+        Added IGNORE_CAST_ALIGN_WARNINGS_BEGIN/_END macros to be able to
+        simply ignore warnings on non-respect of alignment in casts for a well
+        defined code subset.
+
+        * wtf/Compiler.h:
+
 2018-10-15  Keith Miller  <keith_miller@apple.com>
 
         Support arm64 CPUs with a 32-bit address space
