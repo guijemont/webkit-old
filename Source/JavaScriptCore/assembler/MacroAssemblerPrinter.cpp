@@ -137,7 +137,7 @@ void printMemory(PrintStream& out, Context& context)
             out.printf("%p:<0x%02x %d>", p, *p, *p);
             return;
         }
-        // assuming memory is not malformed, it originately pointed to a value
+        // assuming memory is not malformed, it originally pointed to a value
         // of the required size, which should be properly aligned on platforms
         // that require it.
         IGNORE_CAST_ALIGN_WARNINGS_BEGIN
