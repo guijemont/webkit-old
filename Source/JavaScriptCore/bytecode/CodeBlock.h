@@ -1048,7 +1048,7 @@ inline Register& ExecState::uncheckedR(VirtualRegister reg)
 }
 
 template <typename ExecutableType>
-JSObject* ScriptExecutable::prepareForExecution(VM& vm, JSFunction* function, JSScope* scope, CodeSpecializationKind kind, CodeBlock*& resultCodeBlock)
+std::optional<Exception*> ScriptExecutable::prepareForExecution(VM& vm, JSFunction* function, JSScope* scope, CodeSpecializationKind kind, CodeBlock*& resultCodeBlock)
 {
     if (hasJITCodeFor(kind)) {
         if (std::is_same<ExecutableType, EvalExecutable>::value)
@@ -1061,9 +1061,15 @@ JSObject* ScriptExecutable::prepareForExecution(VM& vm, JSFunction* function, JS
             resultCodeBlock = jsCast<CodeBlock*>(jsCast<FunctionExecutable*>(this)->codeBlockFor(kind));
         else
             RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
+        return std::nullopt;
     }
-    return prepareForExecutionImpl(vm, function, scope, kind, resultCodeBlock);
+    JSObject* exception = prepareForExecutionImpl(vm, function, scope, kind, resultCodeBlock);
+    if (exception) {
+        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
+        return std::optional<Exception *>(reinterpret_cast<Exception*>(exception));
+        IGNORE_CAST_ALIGN_WARNINGS_END
+    } else
+        return std::nullopt;
 }
 
 #define CODEBLOCK_LOG_EVENT(codeBlock, summary, details) \

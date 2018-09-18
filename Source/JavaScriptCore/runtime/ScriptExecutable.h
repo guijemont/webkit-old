@@ -105,7 +105,7 @@ public:
     // to point to it. This forces callers to have a CodeBlock* in a register or on the stack that will be marked
     // by conservative GC if a GC happens after we create the CodeBlock.
     template <typename ExecutableType>
-    JSObject* prepareForExecution(VM&, JSFunction*, JSScope*, CodeSpecializationKind, CodeBlock*& resultCodeBlock);
+    std::optional<Exception*> prepareForExecution(VM&, JSFunction*, JSScope*, CodeSpecializationKind, CodeBlock*& resultCodeBlock);
 
 private:
     friend class ExecutableBase;
