@@ -1,4 +1,4 @@
-2018-09-05  Guillaume Emont  <guijemont@igalia.com>
+2018-09-19  Guillaume Emont  <guijemont@igalia.com>
 
         [JSC] Remove gcc warnings on mips and armv7
         https://bugs.webkit.org/show_bug.cgi?id=188598
