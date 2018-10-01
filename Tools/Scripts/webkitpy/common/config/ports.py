@@ -241,3 +241,11 @@ class JscOnlyPort(DeprecatedPort):
         command = self.script_shell_command("build-jsc")
         command.append("--jsc-only")
         return self._append_build_style_flag(command, build_style)
+
+class JscOnlyEmbeddedPort(JscOnlyPort):
+    port_flag_name = "jsc-only-embedded"
+
+    def run_javascriptcore_tests_command(self, build_style=None):
+        command = super(JscOnlyEmbeddedPort, self).run_javascriptcore_tests_command(build_style)
+        # FIXME: make magic happen
+        return command
