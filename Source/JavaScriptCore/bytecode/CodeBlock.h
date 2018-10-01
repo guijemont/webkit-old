@@ -1063,13 +1063,7 @@ std::optional<Exception*> ScriptExecutable::prepareForExecution(VM& vm, JSFuncti
             RELEASE_ASSERT_NOT_REACHED();
         return std::nullopt;
     }
-    JSObject* exception = prepareForExecutionImpl(vm, function, scope, kind, resultCodeBlock);
-    if (exception) {
-        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
-        return std::optional<Exception *>(reinterpret_cast<Exception*>(exception));
-        IGNORE_CAST_ALIGN_WARNINGS_END
-    } else
-        return std::nullopt;
+    return prepareForExecutionImpl(vm, function, scope, kind, resultCodeBlock);
 }
 
 #define CODEBLOCK_LOG_EVENT(codeBlock, summary, details) \

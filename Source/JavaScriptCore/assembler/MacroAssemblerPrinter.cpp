@@ -138,8 +138,8 @@ void printMemory(PrintStream& out, Context& context)
             return;
         }
         // assuming memory is not malformed, it originally pointed to a value
-        // of the required size, which should be properly aligned on platforms
-        // that require it.
+        // of the required size, which should already be properly aligned on
+        // platforms that require it.
         IGNORE_CAST_ALIGN_WARNINGS_BEGIN
         if (memory.numBytes == sizeof(int16_t)) {
             auto p = reinterpret_cast<int16_t*>(ptr);

@@ -337,7 +337,7 @@ static void setupJIT(VM& vm, CodeBlock* codeBlock)
 #endif
 }
 
-JSObject* ScriptExecutable::prepareForExecutionImpl(
+std::optional<Exception*> ScriptExecutable::prepareForExecutionImpl(
     VM& vm, JSFunction* function, JSScope* scope, CodeSpecializationKind kind, CodeBlock*& resultCodeBlock)
 {
     auto throwScope = DECLARE_THROW_SCOPE(vm);
@@ -345,15 +345,16 @@ JSObject* ScriptExecutable::prepareForExecutionImpl(
 
     if (vm.getAndClearFailNextNewCodeBlock()) {
         auto& state = *scope->globalObject(vm)->globalExec();
-        return throwException(&state, throwScope, createError(&state, "Forced Failure"_s));
+        return std::optional<Exception *>(bitwise_cast<Exception*>(throwException(&state, throwScope, createError(&state, "Forced Failure"_s))));
     }
 
     JSObject* exception = nullptr;
     CodeBlock* codeBlock = newCodeBlockFor(kind, function, scope, exception);
     resultCodeBlock = codeBlock;
     EXCEPTION_ASSERT(!!throwScope.exception() == !codeBlock);
-    if (UNLIKELY(!codeBlock))
-        return exception;
+    if (UNLIKELY(!codeBlock)) {
+        return std::optional<Exception *>(bitwise_cast<Exception*>(exception));
+    }
     
     if (Options::validateBytecode())
         codeBlock->validate();
@@ -364,7 +365,7 @@ JSObject* ScriptExecutable::prepareForExecutionImpl(
         setupJIT(vm, codeBlock);
     
     installCode(vm, codeBlock, codeBlock->codeType(), codeBlock->specializationKind());
-    return nullptr;
+    return std::nullopt;
 }
 
 CodeBlockHash ScriptExecutable::hashFor(CodeSpecializationKind kind) const
