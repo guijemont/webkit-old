@@ -35,6 +35,7 @@
         (JSC::JSBigInt::dataStorage):
         Pointer arithmetics done correctly, but gcc doesn't understand this,
         so we ignore -Wcast-align
+        * runtime/ScriptExecutable.cpp:
         * runtime/ScriptExecutable.h:
         Make ScriptExecutable::prepareForExecution() return an
         std::optional<Exception*> instead of a JSObject*.
