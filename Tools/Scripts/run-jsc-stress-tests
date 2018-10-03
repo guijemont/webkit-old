@@ -43,6 +43,8 @@ class String
     end
 end
 
+RemoteHost = Struct.new(:name, :user, :host, :port, :remoteDirectory)
+
 THIS_SCRIPT_PATH = Pathname.new(__FILE__).realpath
 SCRIPTS_PATH = THIS_SCRIPT_PATH.dirname
 WEBKIT_PATH = SCRIPTS_PATH.dirname.dirname
@@ -228,10 +230,7 @@ GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
         $tarball = true
         $remote = true
         uri = URI("ssh://" + arg)
-        $remoteHosts << { :name => "default-#{$remoteHosts.length.to_s}",
-                          :user => uri.user,
-                          :host => uri.host,
-                          :port => uri.port }
+        $remoteHosts << RemoteHost.new("default-#{$remoteHosts.length.to_s}", uri.user, uri.host, uri.port)
     when '--remote-config-file'
         $remoteConfigFile = arg
     when '--child-processes'
@@ -265,12 +264,9 @@ if $remoteConfigFile
         $tarball = true
         $remote = true
         uri = URI("ssh://" + config['remote'])
-        $remoteHosts = [ { :name => 'default',
-                           :user => uri.user,
-                           :host => uri.host,
-                           :port => uri.port }]
+        $remoteHosts = [ RemoteHost.new("default", uri.user, uri.host, uri.port) ]
         if config['remoteDirectory']
-            $remoteHosts[0][:remoteDirectory] = config['remoteDirectory']
+            $remoteHosts[0].remoteDirectory = config['remoteDirectory']
         end
     end
 
@@ -283,12 +279,9 @@ if $remoteConfigFile
             | remote |
             uri = URI("ssh://" + remote['address'])
 
-            host = { :name => remote['name'],
-                     :user => uri.user,
-                     :host => uri.host,
-                     :port => uri.port }
+            host = RemoteHost.new(remote['name'], uri.user, uri.host, uri.port)
             if remote['remoteDirectory']
-                host[:remoteDirectory] = remote['remoteDirectory']
+                host.remoteDirectory = remote['remoteDirectory']
             end
             host
         }
@@ -1789,10 +1782,10 @@ end
 def sshRead(cmd, remoteIndex=0)
     raise unless $remote
 
-    remoteHost=$remoteHosts[remoteIndex]
+    remoteHost = $remoteHosts[remoteIndex]
 
     result = ""
-    IO.popen("ssh -p #{remoteHost[:port]} #{remoteHost[:user]}@#{remoteHost[:host]} '#{cmd}'", "r") {
+    IO.popen("ssh -p #{remoteHost.port} #{remoteHost.user}@#{remoteHost.host} '#{cmd}'", "r") {
       | inp |
       inp.each_line {
         | line |
@@ -1905,23 +1898,23 @@ end
 
 def runTestRunner(remoteIndex=0)
     if $remote
-        remoteHost=$remoteHosts[remoteIndex]
-        if !remoteHost[:remoteDirectory]
-            remoteHost[:remoteDirectory] = JSON::parse(sshRead("cat ~/.bencher", remoteIndex))["tempPath"]
+        remoteHost = $remoteHosts[remoteIndex]
+        if !remoteHost.remoteDirectory
+            remoteHost.remoteDirectory = JSON::parse(sshRead("cat ~/.bencher", remoteIndex))["tempPath"]
         end
-        mysys("ssh", "-p", remoteHost[:port].to_s, "#{remoteHost[:user]}@#{remoteHost[:host]}", "mkdir -p #{remoteHost[:remoteDirectory]}")
-        mysys("scp", "-P", remoteHost[:port].to_s, ($outputDir.dirname + $tarFileName).to_s, "#{remoteHost[:user]}@#{remoteHost[:host]}:#{remoteHost[:remoteDirectory]}")
+        mysys("ssh", "-p", remoteHost.port.to_s, "#{remoteHost.user}@#{remoteHost.host}", "mkdir -p #{remoteHost.remoteDirectory}")
+        mysys("scp", "-P", remoteHost.port.to_s, ($outputDir.dirname + $tarFileName).to_s, "#{remoteHost.user}@#{remoteHost.host}:#{remoteHost.remoteDirectory}")
         remoteScript = "\""
-        remoteScript += "cd #{remoteHost[:remoteDirectory]} && "
+        remoteScript += "cd #{remoteHost.remoteDirectory} && "
         remoteScript += "rm -rf #{$outputDir.basename} && "
         remoteScript += "tar xzf #{$tarFileName} && "
         remoteScript += "cd #{$outputDir.basename}/.runner && "
         remoteScript += "export DYLD_FRAMEWORK_PATH=\\\"\\$(cd #{$testingFrameworkPath.dirname}; pwd)\\\" && "
-        remoteScript += "export LD_LIBRARY_PATH=#{remoteHost[:remoteDirectory]}/#{$outputDir.basename}/#{$jscPath.dirname} && "
+        remoteScript += "export LD_LIBRARY_PATH=#{remoteHost.remoteDirectory}/#{$outputDir.basename}/#{$jscPath.dirname} && "
         remoteScript += "export JSCTEST_timeout=#{Shellwords.shellescape(ENV['JSCTEST_timeout'])} && "
         $envVars.each { |var| remoteScript += "export " << var << "\n" }
         remoteScript += "#{testRunnerCommand(remoteIndex)}\""
-        runAndMonitorTestRunnerCommand("ssh", "-p", remoteHost[:port].to_s, "#{remoteHost[:user]}@#{remoteHost[:host]}", remoteScript)
+        runAndMonitorTestRunnerCommand("ssh", "-p", remoteHost.port.to_s, "#{remoteHost.user}@#{remoteHost.host}", remoteScript)
     else
         Dir.chdir($runnerDir) {
             runAndMonitorTestRunnerCommand(testRunnerCommand)
@@ -1937,7 +1930,7 @@ def detectFailures
     if $remote
         $remoteHosts.each_with_index {
             | host, remoteIndex |
-            output = sshRead("cd #{host[:remoteDirectory]}/#{$outputDir.basename}/.runner && find . -maxdepth 1 -name \"test_fail_*\"", remoteIndex)
+            output = sshRead("cd #{host.remoteDirectory}/#{$outputDir.basename}/.runner && find . -maxdepth 1 -name \"test_fail_*\"", remoteIndex)
             output.split(/\n/).each {
                 | line |
                 next unless line =~ /test_fail_/
