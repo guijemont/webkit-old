@@ -228,10 +228,10 @@ GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
         $tarball = true
         $remote = true
         uri = URI("ssh://" + arg)
-        $remoteHosts = [ { :name => 'default',
-                           :user => uri.user,
-                           :host => uri.host,
-                           :port => uri.port }]
+        $remoteHosts << { :name => "default-#{$remoteHosts.length.to_s}",
+                          :user => uri.user,
+                          :host => uri.host,
+                          :port => uri.port }
     when '--remote-config-file'
         $remoteConfigFile = arg
     when '--child-processes'
