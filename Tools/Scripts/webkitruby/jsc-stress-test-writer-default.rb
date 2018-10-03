@@ -332,7 +332,7 @@ def prepareMakeTestRunner(remoteIndex)
         | plan |
         if !$remote or plan.index % $remoteHosts.length == remoteIndex
             runIndices << plan.index
-    end
+        end
     }
     
     File.open($runnerDir + "Makefile.#{remoteIndex.to_s}", "w") {
