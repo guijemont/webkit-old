@@ -1880,7 +1880,6 @@ def runAndMonitorTestRunnerCommand(*cmd)
                end
 
                string  = ""
-               # FIXME multi remotes will have to work differently here
                string += "\r#{lpad(didRun.size, numberOfTests.to_s.size)}/#{numberOfTests}"
                unless didFail.empty?
                    string += " (failed #{didFail.size})"
