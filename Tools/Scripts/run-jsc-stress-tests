@@ -259,6 +259,7 @@ if $remoteConfigFile
     file = File.read($remoteConfigFile)
     config = JSON.parse(file)
 
+    # old style config allowing for only one remote
     if !$remote and config['remote']
         $copyVM = true
         $tarball = true
@@ -273,11 +274,12 @@ if $remoteConfigFile
         end
     end
 
-    if !$remote and config['remotes']
+    # we can combine --remote and a new style config
+    if config['remotes']
         $copyVM = true
         $tarball = true
         $remote = true
-        $remoteHosts = config['remotes'].map {
+        $remoteHosts += config['remotes'].map {
             | remote |
             uri = URI("ssh://" + remote['address'])
 
@@ -323,7 +325,7 @@ else
     $jscPath = Pathname.new(jscArg).realpath
 end
 
-$progressMeter = ($verbosity == 0 and $stdout.tty?)
+$progressMeter = ($verbosity == 0 and $stdout.tty? and $remoteHosts.length <= 1)
 
 if $bundle
     $jscPath = $bundle + ".vm" + "JavaScriptCore.framework" + "Resources" + "jsc"
