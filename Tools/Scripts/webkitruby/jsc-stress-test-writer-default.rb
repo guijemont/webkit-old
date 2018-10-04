@@ -335,7 +335,7 @@ def prepareMakeTestRunner(remoteIndex)
         end
     }
     
-    File.open($runnerDir + "Makefile.#{remoteIndex.to_s}", "w") {
+    File.open($runnerDir + "Makefile.#{remoteIndex}", "w") {
         | outp |
         outp.puts("all: " + runIndices.map{|v| "test_done_#{v}"}.join(' '))
         runIndices.each {
@@ -362,7 +362,7 @@ def testRunnerCommand(remoteIndex=0)
     when :shell
         command = "sh runscript"
     when :make
-        command = "make -j #{$numChildProcesses.to_s} -s -f Makefile.#{remoteIndex.to_s}"
+        command = "make -j #{$numChildProcesses} -s -f Makefile.#{remoteIndex}"
     when :ruby
         command = "ruby runscript"
     else
