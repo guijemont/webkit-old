@@ -29,6 +29,7 @@
 #include "CodeBlock.h"
 #include "Debugger.h"
 #include "EvalCodeBlock.h"
+#include "Exception.h"
 #include "FunctionCodeBlock.h"
 #include "IsoCellSetInlines.h"
 #include "JIT.h"
@@ -345,16 +346,15 @@ std::optional<Exception*> ScriptExecutable::prepareForExecutionImpl(
 
     if (vm.getAndClearFailNextNewCodeBlock()) {
         auto& state = *scope->globalObject(vm)->globalExec();
-        return std::optional<Exception *>(bitwise_cast<Exception*>(throwException(&state, throwScope, createError(&state, "Forced Failure"_s))));
+        return std::optional<Exception *>(static_cast<Exception*>(throwException(&state, throwScope, createError(&state, "Forced Failure"_s))));
     }
 
     JSObject* exception = nullptr;
     CodeBlock* codeBlock = newCodeBlockFor(kind, function, scope, exception);
     resultCodeBlock = codeBlock;
     EXCEPTION_ASSERT(!!throwScope.exception() == !codeBlock);
-    if (UNLIKELY(!codeBlock)) {
-        return std::optional<Exception *>(bitwise_cast<Exception*>(exception));
-    }
+    if (UNLIKELY(!codeBlock))
+        return std::optional<Exception *>(static_cast<Exception*>(exception));
     
     if (Options::validateBytecode())
         codeBlock->validate();
