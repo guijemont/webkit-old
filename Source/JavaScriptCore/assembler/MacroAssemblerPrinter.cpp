@@ -126,20 +126,20 @@ void printMemory(PrintStream& out, Context& context)
         break;
     }
     case Memory::AddressType::AbsoluteAddress: {
-        ptr = reinterpret_cast<uint8_t*>(const_cast<void*>(memory.u.absoluteAddress.m_ptr));
+        // assuming memory is not malformed, it originally pointed to a value
+        // of the size with which we use it below, so the bitwise_casts should
+        // be safe, including regarding alignment.
+        ptr = bitwise_cast<uint8_t*>(const_cast<void*>(memory.u.absoluteAddress.m_ptr));
         break;
     }
     }
 
     if (memory.dumpStyle == Memory::SingleWordDump) {
         if (memory.numBytes == sizeof(int8_t)) {
-            auto p = reinterpret_cast<int8_t*>(ptr);
+            auto p = bitwise_cast<int8_t*>(ptr);
             out.printf("%p:<0x%02x %d>", p, *p, *p);
             return;
         }
-        // assuming memory is not malformed, it originally pointed to a value
-        // of the required size, which should already be properly aligned on
-        // platforms that require it.
         if (memory.numBytes == sizeof(int16_t)) {
             auto p = bitwise_cast<int16_t*>(ptr);
             out.printf("%p:<0x%04x %d>", p, *p, *p);
