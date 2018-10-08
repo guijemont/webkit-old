@@ -1551,7 +1551,6 @@ inline JSBigInt::Digit* JSBigInt::dataStorage()
     // of Digit, so even though we cast to char* for pointer arithmetics, the
     // bitwise_cast to Digit* is correct and properly aligned.
     return bitwise_cast<Digit*>(reinterpret_cast<char*>(this) + offsetOfData());
-    IGNORE_CAST_ALIGN_WARNINGS_END
 }
 
 inline JSBigInt::Digit JSBigInt::digit(unsigned n)

@@ -191,9 +191,7 @@ FreeList IsoPage<Config>::startAllocating()
 
         static_assert(!(Config::objectSize % alignof(FreeCell)), "Config::objectSize should respect alignment of FreeCell");
         static_assert(!(alignof(IsoPage<Config>) % alignof(FreeCell)), "Alignment of IsoPage<Config> should match that of FreeCell");
-        IGNORE_CAST_ALIGN_WARNINGS_BEGIN
-        FreeCell* cell = reinterpret_cast<FreeCell*>(cellByte);
-        IGNORE_CAST_ALIGN_WARNINGS_END
+        FreeCell* cell = bitwise_cast<FreeCell*>(cellByte);
         cell->setNext(head, secret);
         head = cell;
         bytes += Config::objectSize;

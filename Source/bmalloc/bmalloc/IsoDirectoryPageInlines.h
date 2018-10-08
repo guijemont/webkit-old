@@ -42,10 +42,8 @@ IsoDirectoryPage<Config>* IsoDirectoryPage<Config>::pageFor(IsoDirectory<Config,
     // the char * cast is only used to do a pointer calculation, and said
     // calculation results in a pointer to an existing, correctly aligned
     // IsoDirectoryPage.
-    IGNORE_CAST_ALIGN_WARNINGS_BEGIN
-    return reinterpret_cast<IsoDirectoryPage<Config>*>(
+    return bitwise_cast<IsoDirectoryPage<Config>*>(
         reinterpret_cast<char*>(payload) - BOFFSETOF(IsoDirectoryPage, payload));
-    IGNORE_CAST_ALIGN_WARNINGS_END
 }
 
 } // namespace bmalloc
