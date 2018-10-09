@@ -1462,11 +1462,7 @@ static CodeBlock* codeBlockFromArg(ExecState* exec)
             else
                 candidateCodeBlock = func->jsExecutable()->eitherCodeBlock();
         } else {
-            // Here it's OK to use bitwise_cast since candidateCodeBlock will
-            // only be accessed if VMInspector::isValidCodeBlock() returns
-            // true, which only happens if the address is that of a known
-            // existing, properly aligned codeBlock.
-            candidateCodeBlock = bitwise_cast<CodeBlock*>(value.asCell());
+            candidateCodeBlock = static_cast<CodeBlock*>(value.asCell());
         }
     }
 

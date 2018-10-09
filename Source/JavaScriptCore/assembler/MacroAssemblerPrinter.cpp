@@ -129,7 +129,7 @@ void printMemory(PrintStream& out, Context& context)
         // assuming memory is not malformed, it originally pointed to a value
         // of the size with which we use it below, so the bitwise_casts should
         // be safe, including regarding alignment.
-        ptr = bitwise_cast<uint8_t*>(const_cast<void*>(memory.u.absoluteAddress.m_ptr));
+        ptr = bitwise_cast<uint8_t*>(memory.u.absoluteAddress.m_ptr);
         break;
     }
     }
