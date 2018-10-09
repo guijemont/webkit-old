@@ -1,4 +1,4 @@
-2018-09-19  Guillaume Emont  <guijemont@igalia.com>
+2018-10-09  Guillaume Emont  <guijemont@igalia.com>
 
         [JSC] Remove gcc warnings on mips and armv7
         https://bugs.webkit.org/show_bug.cgi?id=188598
@@ -10,8 +10,7 @@
 
         * assembler/MacroAssemblerPrinter.cpp:
         (JSC::Printer::printMemory):
-        a Memory keeps size information, so we know the original value was of
-        the same size and can ignore the -Wcast-align warning.
+        Use bitwise_cast instead of reinterpret_cast.
         * assembler/testmasm.cpp:
         (JSC::floatOperands):
         marked as potentially unused as it is not used on all platforms.
@@ -29,21 +28,18 @@
         (JSC::Interpreter::executeModuleProgram):
         Update calling code for the prototype change of
         ScriptExecutable::prepareForExecution().
-        * jit/JITOperations.cpp:
-        Same as for Interpreter.cpp.
+        * jit/JITOperations.cpp: Same as for Interpreter.cpp.
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::setUpCall): Same as for Interpreter.cpp.
         * runtime/JSBigInt.cpp:
         (JSC::JSBigInt::dataStorage):
-        Pointer arithmetics done correctly, but gcc doesn't understand this,
-        so we ignore -Wcast-align
+        Use bitwise_cast instead of reinterpret_cast.
         * runtime/ScriptExecutable.cpp:
         * runtime/ScriptExecutable.h:
         Make ScriptExecutable::prepareForExecution() return an
         std::optional<Exception*> instead of a JSObject*.
         * tools/JSDollarVM.cpp:
-        (JSC::codeBlockFromArg):
-        After the cast, a check is done to make sure that the pointer is to a
-        known CodeBlock before using it, so if the result is badly aligned it
-        won't be used anyways.
+        (JSC::codeBlockFromArg): Use bitwise_cast instead of reinterpret_cast.
 
 2018-10-16  Devin Rousso  <drousso@apple.com>
 
