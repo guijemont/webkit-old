@@ -5,8 +5,8 @@
 
         Reviewed by NOBODY (OOPS!).
 
-        Remove many gcc/clang warnings that are false positives, mostly
-        alignment issues.
+        Fix many gcc/clang warnings that are false positives, mostly alignment
+        issues.
 
         * assembler/MacroAssemblerPrinter.cpp:
         (JSC::Printer::printMemory):
