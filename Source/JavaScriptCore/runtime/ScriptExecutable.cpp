@@ -346,7 +346,7 @@ std::optional<Exception*> ScriptExecutable::prepareForExecutionImpl(
 
     if (vm.getAndClearFailNextNewCodeBlock()) {
         auto& state = *scope->globalObject(vm)->globalExec();
-        return std::optional<Exception *>(static_cast<Exception*>(throwException(&state, throwScope, createError(&state, "Forced Failure"_s))));
+        return static_cast<Exception*>(throwException(&state, throwScope, createError(&state, "Forced Failure"_s)));
     }
 
     JSObject* exception = nullptr;
@@ -354,7 +354,7 @@ std::optional<Exception*> ScriptExecutable::prepareForExecutionImpl(
     resultCodeBlock = codeBlock;
     EXCEPTION_ASSERT(!!throwScope.exception() == !codeBlock);
     if (UNLIKELY(!codeBlock))
-        return std::optional<Exception *>(static_cast<Exception*>(exception));
+        return static_cast<Exception*>(exception);
     
     if (Options::validateBytecode())
         codeBlock->validate();
