@@ -182,9 +182,7 @@ bool findBitInWord(T word, size_t& index, size_t endIndex, bool value)
     return false;
 }
 
-/*
- * Copied from WTF/wtf/StdLibExtras.h
- */
+// Copied from WTF/wtf/StdLibExtras.h
 template<typename ToType, typename FromType>
 inline ToType bitwise_cast(FromType from)
 {

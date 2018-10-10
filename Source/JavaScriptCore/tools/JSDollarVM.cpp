@@ -1461,9 +1461,8 @@ static CodeBlock* codeBlockFromArg(ExecState* exec)
                 candidateCodeBlock = nullptr;
             else
                 candidateCodeBlock = func->jsExecutable()->eitherCodeBlock();
-        } else {
+        } else
             candidateCodeBlock = static_cast<CodeBlock*>(value.asCell());
-        }
     }
 
     if (candidateCodeBlock && VMInspector::isValidCodeBlock(exec, candidateCodeBlock))
