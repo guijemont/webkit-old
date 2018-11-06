@@ -764,11 +764,13 @@
 #undef ENABLE_DFG_JIT
 #define ENABLE_DFG_JIT 0
 #else
-/* Disable JIT and force C_LOOP on all 32bit-architectures but ARMv7-Thumb2/Linux. */
+/* Disable JIT and force C_LOOP on all 32bit-architectures but ARMv7-Thumb2 and MIPS on Linux. */
 #undef ENABLE_JIT
 #define ENABLE_JIT 0
+#if !((CPU(MIPS)) && OS(LINUX))
 #undef ENABLE_C_LOOP
 #define ENABLE_C_LOOP 1
+#endif
 #endif
 #endif
 

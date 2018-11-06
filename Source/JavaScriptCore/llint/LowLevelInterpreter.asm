@@ -231,6 +231,8 @@ elsif C_LOOP
     const CalleeSaveSpaceAsVirtualRegisters = 1
 elsif ARMv7
     const CalleeSaveSpaceAsVirtualRegisters = 1
+elsif MIPS
+    const CalleeSaveSpaceAsVirtualRegisters = 1
 else
     const CalleeSaveSpaceAsVirtualRegisters = 0
 end
@@ -296,6 +298,8 @@ else
     if C_LOOP
         const metadataTable = csr3
     elsif ARMv7
+        const metadataTable = csr0
+    elsif MIPS
         const metadataTable = csr0
     else
         error
@@ -710,12 +714,11 @@ macro preserveCalleeSavesUsedByLLInt()
     subp CalleeSaveSpaceStackAligned, sp
     if C_LOOP
         storep metadataTable, -PtrSize[cfr]
-    elsif ARMv7
+    elsif ARMv7 or MIPS
         storep metadataTable, -4[cfr]
     elsif ARM64 or ARM64E
         emit "stp x27, x28, [x29, #-16]"
         emit "stp x25, x26, [x29, #-32]"
-    elsif MIPS
     elsif X86
     elsif X86_WIN
     elsif X86_64
@@ -734,12 +737,11 @@ end
 macro restoreCalleeSavesUsedByLLInt()
     if C_LOOP
         loadp -PtrSize[cfr], metadataTable
-    elsif ARMv7
+    elsif ARMv7 or MIPS
         loadp -4[cfr], metadataTable
     elsif ARM64 or ARM64E
         emit "ldp x25, x26, [x29, #-32]"
         emit "ldp x27, x28, [x29, #-16]"
-    elsif MIPS
     elsif X86
     elsif X86_WIN
     elsif X86_64
