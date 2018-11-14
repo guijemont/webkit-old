@@ -635,7 +635,7 @@ if C_LOOP or ARM64 or ARM64E or X86_64 or X86_64_WIN
 elsif ARMv7
     const CalleeSaveRegisterCount = 7
 elsif MIPS
-    const CalleeSaveRegisterCount = 1
+    const CalleeSaveRegisterCount = 2
 elsif X86 or X86_WIN
     const CalleeSaveRegisterCount = 3
 end
@@ -651,8 +651,9 @@ macro pushCalleeSaves()
     elsif ARMv7
         emit "push {r4-r6, r8-r11}"
     elsif MIPS
-        emit "addiu $sp, $sp, -4"
-        emit "sw $s4, 0($sp)"
+        emit "addiu $sp, $sp, -8"
+        emit "sw $s0, 0($sp)" # csr0/metaData
+        emit "sw $s4, 4($sp)"
         # save $gp to $s4 so that we can restore it after a function call
         emit "move $s4, $gp"
     elsif X86
@@ -671,8 +672,9 @@ macro popCalleeSaves()
     elsif ARMv7
         emit "pop {r4-r6, r8-r11}"
     elsif MIPS
-        emit "lw $s4, 0($sp)"
-        emit "addiu $sp, $sp, 4"
+        emit "lw $s0, 0($sp)"
+        emit "lw $s4, 4($sp)"
+        emit "addiu $sp, $sp, 8"
     elsif X86
         emit "pop %ebx"
         emit "pop %edi"
@@ -758,7 +760,7 @@ macro restoreCalleeSavesUsedByLLInt()
 end
 
 macro copyCalleeSavesToVMEntryFrameCalleeSavesBuffer(vm, temp)
-    if ARM64 or ARM64E or X86_64 or X86_64_WIN or ARMv7
+    if ARM64 or ARM64E or X86_64 or X86_64_WIN or ARMv7 or MIPS
         loadp VM::topEntryFrame[vm], temp
         vmEntryRecord(temp, temp)
         leap VMEntryRecord::calleeSaveRegistersBuffer[temp], temp
@@ -795,14 +797,14 @@ macro copyCalleeSavesToVMEntryFrameCalleeSavesBuffer(vm, temp)
             storeq csr4, 32[temp]
             storeq csr5, 40[temp]
             storeq csr6, 48[temp]
-        elsif ARMv7
+        elsif ARMv7 or MIPS
             storep csr0, [temp]
         end
     end
 end
 
 macro restoreCalleeSavesFromVMEntryFrameCalleeSavesBuffer(vm, temp)
-    if ARM64 or ARM64E or X86_64 or X86_64_WIN or ARMv7
+    if ARM64 or ARM64E or X86_64 or X86_64_WIN or ARMv7 or MIPS
         loadp VM::topEntryFrame[vm], temp
         vmEntryRecord(temp, temp)
         leap VMEntryRecord::calleeSaveRegistersBuffer[temp], temp
@@ -839,7 +841,7 @@ macro restoreCalleeSavesFromVMEntryFrameCalleeSavesBuffer(vm, temp)
             loadq 32[temp], csr4
             loadq 40[temp], csr5
             loadq 48[temp], csr6
-        elsif ARMv7
+        elsif ARMv7 or MIPS
             loadp [temp], csr0
         end
     end
