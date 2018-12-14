@@ -116,11 +116,11 @@ size_t runwaySize(Kind kind)
 
 void ensureGigacage()
 {
-#if GIGACAGE_ENABLED
     static std::once_flag onceFlag;
     std::call_once(
         onceFlag,
         [] {
+#if GIGACAGE_ENABLED
             if (!shouldBeEnabled())
                 return;
             
@@ -184,8 +184,12 @@ void ensureGigacage()
             vmDeallocatePhysicalPages(base, totalSize);
             protectGigacageBasePtrs();
             g_wasEnabled = true;
-        });
+#else
+    basePtr(Primitive) = nullptr;
+    basePtr(JSValue) = nullptr;
+    g_wasEnabled = false;
 #endif // GIGACAGE_ENABLED
+        });
 }
 
 void disablePrimitiveGigacage()
