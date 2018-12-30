@@ -44,6 +44,10 @@ def usage(message)
     puts
     puts "Optional arguments:"
     puts "--print-bundled-sources              Print bundled sources rather than generating sources"
+    puts "--print-all-sources                  Print all sources rather than generating sources"
+    puts "--generate-xcfilelists               Generate .xcfilelist files"
+    puts "--input-xcfilelist-path              Path of the generated input .xcfilelist file"
+    puts "--output-xcfilelist-path             Path of the generated output .xcfilelist file"
     puts "--feature-flags                 (-f) Space or semicolon separated list of enabled feature flags"
     puts
     puts "Generation options:"
@@ -72,6 +76,10 @@ GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
                ['--source-tree-path', '-s', GetoptLong::REQUIRED_ARGUMENT],
                ['--feature-flags', '-f', GetoptLong::REQUIRED_ARGUMENT],
                ['--print-bundled-sources', GetoptLong::NO_ARGUMENT],
+               ['--print-all-sources', GetoptLong::NO_ARGUMENT],
+               ['--generate-xcfilelists', GetoptLong::NO_ARGUMENT],
+               ['--input-xcfilelist-path', GetoptLong::REQUIRED_ARGUMENT],
+               ['--output-xcfilelist-path', GetoptLong::REQUIRED_ARGUMENT],
                ['--max-cpp-bundle-count', GetoptLong::REQUIRED_ARGUMENT],
                ['--max-obj-c-bundle-count', GetoptLong::REQUIRED_ARGUMENT]).each {
     | opt, arg |
@@ -91,6 +99,14 @@ GetoptLong.new(['--help', '-h', GetoptLong::NO_ARGUMENT],
         arg.gsub(/\s+/, ";").split(";").map { |x| $featureFlags[x] = true }
     when '--print-bundled-sources'
         $mode = :PrintBundledSources
+    when '--print-all-sources'
+        $mode = :PrintAllSources
+    when '--generate-xcfilelists'
+        $mode = :GenerateXCFilelists
+    when '--input-xcfilelist-path'
+        $inputXCFilelistPath = arg
+    when '--output-xcfilelist-path'
+        $outputXCFilelistPath = arg
     when '--max-cpp-bundle-count'
         $maxCppBundleCount = arg.to_i
     when '--max-obj-c-bundle-count'
@@ -291,6 +307,8 @@ sourceFiles.sort.each {
     case $mode
     when :GenerateBundles
         ProcessFileForUnifiedSourceGeneration(sourceFile)
+    when :PrintAllSources
+        $generatedSources << sourceFile
     when :PrintBundledSources
         $generatedSources << sourceFile if $bundleManagers[sourceFile.path.extname] && sourceFile.unifiable
     end
