@@ -503,7 +503,7 @@ inline JSValue fastJoin(ExecState& state, JSObject* thisObject, StringView separ
         }
         RELEASE_AND_RETURN(scope, joiner.join(state));
     }
-    case ArrayClass: {
+    case ALL_UNDECIDED_INDEXING_TYPES: {
         switch (separator.length()) {
         case 0:
             RELEASE_AND_RETURN(scope, jsEmptyString(&state));
