@@ -503,6 +503,18 @@ inline JSValue fastJoin(ExecState& state, JSObject* thisObject, StringView separ
         }
         RELEASE_AND_RETURN(scope, joiner.join(state));
     }
+    case ArrayClass: {
+        switch (separator.length()) {
+        case 0:
+            RELEASE_AND_RETURN(scope, jsEmptyString(&state));
+        case 1: {
+            UChar character = separator[0];
+            if (!(character & ~0xff))
+                RELEASE_AND_RETURN(scope, repeatCharacter(state, static_cast<LChar>(character), length));
+            RELEASE_AND_RETURN(scope, repeatCharacter(state, character, length));
+        }
+        }
+    }
     }
 
 generalCase:
