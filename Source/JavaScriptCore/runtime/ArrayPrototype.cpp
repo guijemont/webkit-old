@@ -390,8 +390,9 @@ inline bool canUseFastJoin(const JSObject* thisObject)
     case ALL_CONTIGUOUS_INDEXING_TYPES:
     case ALL_INT32_INDEXING_TYPES:
     case ALL_DOUBLE_INDEXING_TYPES:
-    case ALL_UNDECIDED_INDEXING_TYPES:
         return true;
+    case ALL_UNDECIDED_INDEXING_TYPES:
+        return thisObject->globalObject()->arrayPrototypeChainIsSane();
     default:
         break;
     }
