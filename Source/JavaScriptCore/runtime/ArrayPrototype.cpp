@@ -390,9 +390,8 @@ inline bool canUseFastJoin(const JSObject* thisObject)
     case ALL_CONTIGUOUS_INDEXING_TYPES:
     case ALL_INT32_INDEXING_TYPES:
     case ALL_DOUBLE_INDEXING_TYPES:
-        return true;
     case ALL_UNDECIDED_INDEXING_TYPES:
-        return thisObject->globalObject()->arrayPrototypeChainIsSane();
+        return true;
     default:
         break;
     }
@@ -512,6 +511,8 @@ inline JSValue fastJoin(ExecState& state, JSObject* thisObject, StringView separ
         case 1: {
             if (length == 0)
                 RELEASE_AND_RETURN(scope, jsEmptyString(&state));
+            if (holesMustForwardToPrototype(vm, thisObject))
+                goto generalCase;
             UChar character = separator[0];
             if (!(character & ~0xff))
                 RELEASE_AND_RETURN(scope, repeatCharacter(state, static_cast<LChar>(character), length - 1));
