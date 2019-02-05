@@ -509,7 +509,7 @@ inline JSValue fastJoin(ExecState& state, JSObject* thisObject, StringView separ
         case 0:
             RELEASE_AND_RETURN(scope, jsEmptyString(&state));
         case 1: {
-            if (length == 0)
+            if (length <= 1)
                 RELEASE_AND_RETURN(scope, jsEmptyString(&state));
             if (holesMustForwardToPrototype(vm, thisObject))
                 goto generalCase;
