@@ -513,10 +513,10 @@ inline JSValue fastJoin(ExecState& state, JSObject* thisObject, StringView separ
                 RELEASE_AND_RETURN(scope, jsEmptyString(&state));
             if (holesMustForwardToPrototype(vm, thisObject))
                 goto generalCase;
-            UChar character = separator[0];
-            if (!(character & ~0xff))
-                RELEASE_AND_RETURN(scope, repeatCharacter(state, static_cast<LChar>(character), length - 1));
-            RELEASE_AND_RETURN(scope, repeatCharacter(state, character, length - 1));
+            if (separator.is8Bit())
+                RELEASE_AND_RETURN(scope, repeatCharacter(state, separator.characters8()[0], length - 1));
+            else
+                RELEASE_AND_RETURN(scope, repeatCharacter(state, separator.characters16()[0], length - 1));
         }
         }
     }
