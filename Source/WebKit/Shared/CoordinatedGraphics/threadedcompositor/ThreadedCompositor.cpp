@@ -209,6 +209,9 @@ void ThreadedCompositor::renderNonCompositedWebGL()
 
 void ThreadedCompositor::renderLayerTree()
 {
+    auto now = MonotonicTime::now();
+    dataLogLn("Frame ", now.secondsSinceEpoch().value());
+
     if (m_nonCompositedWebGLEnabled) {
         renderNonCompositedWebGL();
         return;
