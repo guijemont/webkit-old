@@ -48,8 +48,8 @@ void JIT::emit_compareAndJump(const Instruction* instruction, RelationalConditio
     JumpList notInt32Op2;
 
     auto bytecode = instruction->as<Op>();
-    int op1 = bytecode.m_lhs.offset();
-    int op2 = bytecode.m_rhs.offset();
+    VirtualRegister op1 = bytecode.m_lhs.offset();
+    VirtualRegister op2 = bytecode.m_rhs.offset();
     unsigned target = jumpTarget(instruction, bytecode.m_targetLabel);
 
     // Character less.
@@ -102,8 +102,8 @@ template <typename Op>
 void JIT::emit_compareUnsignedAndJump(const Instruction* instruction, RelationalCondition condition)
 {
     auto bytecode = instruction->as<Op>();
-    int op1 = bytecode.m_lhs.offset();
-    int op2 = bytecode.m_rhs.offset();
+    VirtualRegister op1 = bytecode.m_lhs.offset();
+    VirtualRegister op2 = bytecode.m_rhs.offset();
     unsigned target = jumpTarget(instruction, bytecode.m_targetLabel);
 
     if (isOperandConstantInt(op1)) {
@@ -122,9 +122,9 @@ template <typename Op>
 void JIT::emit_compareUnsigned(const Instruction* instruction, RelationalCondition condition)
 {
     auto bytecode = instruction->as<Op>();
-    int dst = bytecode.m_dst.offset();
-    int op1 = bytecode.m_lhs.offset();
-    int op2 = bytecode.m_rhs.offset();
+    VirtualRegister dst = bytecode.m_dst.offset();
+    VirtualRegister op1 = bytecode.m_lhs.offset();
+    VirtualRegister op2 = bytecode.m_rhs.offset();
 
     if (isOperandConstantInt(op1)) {
         emitLoad(op2, regT3, regT2);

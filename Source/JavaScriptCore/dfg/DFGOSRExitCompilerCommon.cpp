@@ -30,6 +30,7 @@
 
 #include "Bytecodes.h"
 #include "CheckpointOSRExitSideState.h"
+#include "CodeBlock.h"
 #include "DFGJITCode.h"
 #include "DFGOperations.h"
 #include "JIT.h"
@@ -320,7 +321,6 @@ void reifyInlinedCallFrames(CCallHelpers& jit, const OSRExitBase& exit)
             jit.store64(AssemblyHelpers::TrustedImm64(JSValue::encode(JSValue(inlineCallFrame->calleeConstant()))), AssemblyHelpers::addressFor(VirtualRegister(inlineCallFrame->stackOffset + CallFrameSlot::callee)));
 #else // USE(JSVALUE64) // so this is the 32-bit part
         jit.storePtr(callerFrameGPR, AssemblyHelpers::addressForByteOffset(inlineCallFrame->callerFrameOffset()));
-        const Instruction* instruction = baselineCodeBlock->instructions().at(codeOrigin->bytecodeIndex()).ptr();
         uint32_t locationBits = CallSiteIndex().bits();
         jit.store32(AssemblyHelpers::TrustedImm32(locationBits), AssemblyHelpers::tagFor(VirtualRegister(inlineCallFrame->stackOffset + CallFrameSlot::argumentCountIncludingThis)));
         jit.store32(AssemblyHelpers::TrustedImm32(JSValue::CellTag), AssemblyHelpers::tagFor(VirtualRegister(inlineCallFrame->stackOffset + CallFrameSlot::callee)));
@@ -336,7 +336,7 @@ void reifyInlinedCallFrames(CCallHelpers& jit, const OSRExitBase& exit)
 #else
         auto bytecodeIndex = jit.baselineCodeBlock()->bytecodeIndexForExit(codeOrigin->bytecodeIndex());
         const Instruction* instruction = jit.baselineCodeBlock()->instructions(bytecodeIndex).at().ptr();
-        uint32_t locationBits = CallSiteIndex(bitwise_cast<uint32_t>(instruction)).bits();
+        uint32_t locationBits = CallSiteIndex(bitwise_cast<uint32_t>(BytecodeIndex(codeOrigin->bytecodeIndex().offset()))).bits();
 #endif
         jit.store32(AssemblyHelpers::TrustedImm32(locationBits), AssemblyHelpers::tagFor(CallFrameSlot::argumentCountIncludingThis));
     }
