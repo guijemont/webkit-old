@@ -335,7 +335,6 @@ void reifyInlinedCallFrames(CCallHelpers& jit, const OSRExitBase& exit)
         uint32_t locationBits = CallSiteIndex(BytecodeIndex(codeOrigin->bytecodeIndex().offset())).bits();
 #else
         auto bytecodeIndex = jit.baselineCodeBlock()->bytecodeIndexForExit(codeOrigin->bytecodeIndex());
-        const Instruction* instruction = jit.baselineCodeBlock()->instructions(bytecodeIndex).at().ptr();
         uint32_t locationBits = CallSiteIndex(bitwise_cast<uint32_t>(BytecodeIndex(codeOrigin->bytecodeIndex().offset()))).bits();
 #endif
         jit.store32(AssemblyHelpers::TrustedImm32(locationBits), AssemblyHelpers::tagFor(CallFrameSlot::argumentCountIncludingThis));
