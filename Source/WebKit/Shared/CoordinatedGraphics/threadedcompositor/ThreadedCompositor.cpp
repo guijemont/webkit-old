@@ -34,6 +34,7 @@
 #include <WebCore/PlatformDisplay.h>
 #include <WebCore/Settings.h>
 #include <WebCore/TransformationMatrix.h>
+#include <wtf/Codewatch.h>
 #include <wtf/SetForScope.h>
 
 #if USE(LIBEPOXY)
@@ -212,8 +213,14 @@ void ThreadedCompositor::renderLayerTree()
     if (m_nonCompositedWebGLEnabled) {
         renderNonCompositedWebGL();
 
+        auto& jitWatch = Codewatch<CodewatchType::JIT>::getCodewatch();
+        auto& dfgWatch = Codewatch<CodewatchType::DFG>::getCodewatch();
         auto now = MonotonicTime::now();
-        dataLogLn("Frame ", now.secondsSinceEpoch().value());
+        Seconds jitTime = jitWatch.reset();
+        Seconds dfgTime = dfgWatch.reset();
+        dataLogLn("Frame ", now.secondsSinceEpoch().value(),
+                " ", jitTime.value() * 1000.0,
+                " ", dfgTime.value() * 1000.0);
         return;
     }
 

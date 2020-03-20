@@ -41,6 +41,7 @@
 #include "LinkBuffer.h"
 #include "MaxFrameExtentForSlowPathCall.h"
 #include "OpcodeInlines.h"
+#include "ProbeContext.h"
 #include "SlowPathCall.h"
 #include "SuperSampler.h"
 #include "ThunkGenerators.h"
@@ -77,6 +78,7 @@ void JIT::emit_op_end(Instruction* currentInstruction)
     RELEASE_ASSERT(returnValueGPR != callFrameRegister);
     emitGetVirtualRegister(currentInstruction[1].u.operand, returnValueGPR);
     emitRestoreCalleeSaves();
+    CODEWATCH_JIT_STOP(this);
     emitFunctionEpilogue();
     ret();
 }
@@ -306,6 +308,7 @@ void JIT::emit_op_ret(Instruction* currentInstruction)
 
     checkStackPointerAlignment();
     emitRestoreCalleeSaves();
+    CODEWATCH_JIT_STOP(this);
     emitFunctionEpilogue();
     ret();
 }

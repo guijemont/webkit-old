@@ -79,6 +79,7 @@
 #include "ProfilerDatabase.h"
 #include "TrackedReferences.h"
 #include "VMInlines.h"
+#include <wtf/Codewatch.h>
 
 #if ENABLE(FTL_JIT)
 #include "FTLCapabilities.h"
@@ -175,6 +176,8 @@ void Plan::compileInThread(ThreadData* threadData)
 
     MonotonicTime before { };
     CString codeBlockName;
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     if (UNLIKELY(computeCompileTimes()))
         before = MonotonicTime::now();
     if (UNLIKELY(reportCompileTimes()))

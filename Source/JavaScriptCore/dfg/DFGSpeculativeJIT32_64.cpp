@@ -43,6 +43,7 @@
 #include "JSPropertyNameEnumerator.h"
 #include "ObjectPrototype.h"
 #include "JSCInlines.h"
+#include "ProbeContext.h"
 #include "SetupVarargsFrame.h"
 #include "SuperSampler.h"
 #include "Watchdog.h"
@@ -808,7 +809,9 @@ void SpeculativeJIT::emitCall(Node* node)
         m_jit.subPtr(TrustedImm32(requiredBytes), JITCompiler::stackPointerRegister);
         m_jit.setupArguments<decltype(operationCallEval)>(GPRInfo::regT0);
         prepareForExternalCall();
+        CODEWATCH_JIT_STOP(&m_jit);
         m_jit.appendCall(operationCallEval);
+        CODEWATCH_JIT_START(&m_jit);
         m_jit.exceptionCheck();
         JITCompiler::Jump done = m_jit.branchIfNotEmpty(GPRInfo::returnValueGPR2);
         
@@ -816,7 +819,9 @@ void SpeculativeJIT::emitCall(Node* node)
         m_jit.addPtr(TrustedImm32(requiredBytes), JITCompiler::stackPointerRegister);
         m_jit.load32(JITCompiler::calleeFrameSlot(CallFrameSlot::callee).withOffset(PayloadOffset), GPRInfo::regT0);
         m_jit.load32(JITCompiler::calleeFrameSlot(CallFrameSlot::callee).withOffset(TagOffset), GPRInfo::regT1);
+        CODEWATCH_JIT_STOP(&m_jit);
         m_jit.emitDumbVirtualCall(*m_jit.vm(), info);
+        CODEWATCH_JIT_START(&m_jit);
         
         done.link(&m_jit);
         setResultAndResetStack();
@@ -838,7 +843,9 @@ void SpeculativeJIT::emitCall(Node* node)
             info->setFrameShuffleData(shuffleData);
             CallFrameShuffler(m_jit, shuffleData).prepareForTailCall();
             
+            CODEWATCH_JIT_STOP(&m_jit);
             JITCompiler::Call call = m_jit.nearTailCall();
+            CODEWATCH_JIT_START(&m_jit);
             
             JITCompiler::Label slowPath = m_jit.label();
             patchableJump.m_jump.linkTo(slowPath, &m_jit);
@@ -859,7 +866,9 @@ void SpeculativeJIT::emitCall(Node* node)
         
         m_jit.emitStoreCallSiteIndex(callSite);
         
+        CODEWATCH_JIT_STOP(&m_jit);
         JITCompiler::Call call = m_jit.nearCall();
+        CODEWATCH_JIT_START(&m_jit);
         JITCompiler::Jump done = m_jit.jump();
         
         JITCompiler::Label slowPath = m_jit.label();
@@ -893,7 +902,9 @@ void SpeculativeJIT::emitCall(Node* node)
         }
     }
 
+    CODEWATCH_JIT_STOP(&m_jit);
     JITCompiler::Call fastCall = isTail ? m_jit.nearTailCall() : m_jit.nearCall();
+    CODEWATCH_JIT_START(&m_jit);
 
     JITCompiler::Jump done = m_jit.jump();
 
@@ -923,7 +934,9 @@ void SpeculativeJIT::emitCall(Node* node)
     }
 
     m_jit.move(TrustedImmPtr(info), GPRInfo::regT2);
+    CODEWATCH_JIT_STOP(&m_jit);
     JITCompiler::Call slowCall = m_jit.nearCall();
+    CODEWATCH_JIT_START(&m_jit);
 
     done.link(&m_jit);
 
@@ -2959,6 +2972,7 @@ void SpeculativeJIT::compile(Node* node)
         }
 
         m_jit.emitRestoreCalleeSaves();
+        CODEWATCH_DFG_STOP(&m_jit);
         m_jit.emitFunctionEpilogue();
         m_jit.ret();
         

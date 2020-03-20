@@ -37,12 +37,15 @@
 #include "MacroAssembler.h"
 #include "JSCInlines.h"
 #include "DFGOSRExitCompilerCommon.h"
+#include "ProbeContext.h"
+
 
 namespace JSC { namespace DFG {
 
 MacroAssemblerCodeRef<JITThunkPtrTag> osrExitThunkGenerator(VM* vm)
 {
     MacroAssembler jit;
+    CODEWATCH_DFG_STOP(&jit);
     jit.probe(OSRExit::executeOSRExit, vm);
     LinkBuffer patchBuffer(jit, GLOBAL_THUNK_ID);
     return FINALIZE_CODE(patchBuffer, JITThunkPtrTag, "DFG OSR exit thunk");
@@ -99,6 +102,7 @@ MacroAssemblerCodeRef<JITThunkPtrTag> osrExitGenerationThunkGenerator(VM* vm)
 #endif
     }
 
+    CODEWATCH_DFG_STOP(&jit);
     jit.jump(MacroAssembler::AbsoluteAddress(&vm->osrExitJumpDestination), OSRExitPtrTag);
 
     LinkBuffer patchBuffer(jit, GLOBAL_THUNK_ID);
@@ -141,6 +145,7 @@ MacroAssemblerCodeRef<JITThunkPtrTag> osrEntryThunkGenerator(VM* vm)
     jit.abortWithReason(DFGUnreasonableOSREntryJumpDestination);
 
     ok.link(&jit);
+    CODEWATCH_DFG_START(&jit);
     jit.restoreCalleeSavesFromEntryFrameCalleeSavesBuffer(vm->topEntryFrame);
     jit.emitMaterializeTagCheckRegisters();
 

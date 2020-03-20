@@ -37,6 +37,7 @@
 #include "JSCInlines.h"
 #include "LinkBuffer.h"
 #include "OpcodeInlines.h"
+#include "ProbeContext.h"
 #include "ResultType.h"
 #include "SetupVarargsFrame.h"
 #include "StackAlignment.h"
@@ -60,6 +61,7 @@ void JIT::emit_op_ret(Instruction* currentInstruction)
 
     checkStackPointerAlignment();
     emitRestoreCalleeSaves();
+    CODEWATCH_JIT_STOP(this);
     emitFunctionEpilogue();
     ret();
 }
@@ -269,7 +271,9 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     store32(regT1, Address(stackPointerRegister, CallFrameSlot::callee * static_cast<int>(sizeof(Register)) + TagOffset - sizeof(CallerFrameAndPC)));
 
     if (opcodeID == op_call_eval) {
+        // XXX CODEWATCH_JIT_STOP(this);
         compileCallEval(instruction);
+        // XXX CODEWATCH_JIT_START(this);
         return;
     }
 
@@ -289,6 +293,7 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     m_callCompilationInfo[callLinkInfoIndex].hotPathBegin = addressOfLinkedFunctionCheck;
     m_callCompilationInfo[callLinkInfoIndex].callLinkInfo = info;
 
+    CODEWATCH_JIT_STOP(this);
     checkStackPointerAlignment();
     if (opcodeID == op_tail_call || opcodeID == op_tail_call_varargs || opcodeID == op_tail_call_forward_arguments) {
         prepareForTailCallSlow();
@@ -297,6 +302,7 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     }
 
     m_callCompilationInfo[callLinkInfoIndex].hotPathOther = emitNakedCall();
+    CODEWATCH_JIT_START(this);
 
     addPtr(TrustedImm32(stackPointerOffsetFor(m_codeBlock) * sizeof(Register)), callFrameRegister, stackPointerRegister);
     checkStackPointerAlignment();
@@ -319,12 +325,16 @@ void JIT::compileOpCallSlowCase(OpcodeID opcodeID, Instruction* instruction, Vec
     if (opcodeID == op_tail_call || opcodeID == op_tail_call_varargs)
         emitRestoreCalleeSaves();
 
+    CODEWATCH_JIT_STOP(this);
+
     m_callCompilationInfo[callLinkInfoIndex].callReturnLocation = emitNakedCall(m_vm->getCTIStub(linkCallThunkGenerator).retaggedCode<NoPtrTag>());
 
     if (opcodeID == op_tail_call || opcodeID == op_tail_call_varargs) {
         abortWithReason(JITDidReturnFromTailCall);
         return;
     }
+
+    CODEWATCH_JIT_START(this);
 
     addPtr(TrustedImm32(stackPointerOffsetFor(m_codeBlock) * sizeof(Register)), callFrameRegister, stackPointerRegister);
     checkStackPointerAlignment();

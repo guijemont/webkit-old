@@ -35,6 +35,7 @@
 #include "JSCInlines.h"
 #include "MathCommon.h"
 #include "MaxFrameExtentForSlowPathCall.h"
+#include "ProbeContext.h"
 #include "SpecializedThunkJIT.h"
 #include <wtf/InlineASM.h>
 #include <wtf/StringPrintStream.h>
@@ -84,6 +85,7 @@ static void slowPathFor(CCallHelpers& jit, VM* vm, Sprt_JITOperation_ECli slowPa
 {
     jit.sanitizeStackInline(*vm, GPRInfo::nonArgGPR0);
     jit.emitFunctionPrologue();
+    CODEWATCH_JIT_START(&jit);
     jit.storePtr(GPRInfo::callFrameRegister, &vm->topCallFrame);
 #if OS(WINDOWS) && CPU(X86_64)
     // Windows X86_64 needs some space pointed to by arg0 for return types larger than 64 bits.
@@ -118,6 +120,7 @@ static void slowPathFor(CCallHelpers& jit, VM* vm, Sprt_JITOperation_ECli slowPa
     // The second return value GPR will hold a non-zero value for tail calls.
 
     emitPointerValidation(jit, GPRInfo::returnValueGPR, JSEntryPtrTag);
+    CODEWATCH_JIT_STOP(&jit);
     jit.emitFunctionEpilogue();
     jit.untagReturnAddress();
 
@@ -260,6 +263,7 @@ static MacroAssemblerCodeRef<JITThunkPtrTag> nativeForGenerator(VM* vm, ThunkFun
     switch (entryType) {
     case EnterViaCall:
         jit.emitFunctionPrologue();
+        CODEWATCH_JIT_START(&jit);
         break;
     case EnterViaJumpWithSavedTags:
 #if USE(JSVALUE64)
@@ -389,6 +393,7 @@ static MacroAssemblerCodeRef<JITThunkPtrTag> nativeForGenerator(VM* vm, ThunkFun
         JSInterfaceJIT::TrustedImm32(0));
 #endif
 
+    CODEWATCH_JIT_STOP(&jit);
     jit.emitFunctionEpilogue();
     // Return.
     jit.ret();
@@ -1173,6 +1178,7 @@ MacroAssemblerCodeRef<JITThunkPtrTag> boundThisNoArgsFunctionCallGenerator(VM* v
     CCallHelpers jit;
     
     jit.emitFunctionPrologue();
+    CODEWATCH_JIT_START(&jit);
     
     // Set up our call frame.
     jit.storePtr(CCallHelpers::TrustedImmPtr(nullptr), CCallHelpers::addressFor(CallFrameSlot::codeBlock));
@@ -1255,6 +1261,7 @@ MacroAssemblerCodeRef<JITThunkPtrTag> boundThisNoArgsFunctionCallGenerator(VM* v
     emitPointerValidation(jit, GPRInfo::regT0, JSEntryPtrTag);
     jit.call(GPRInfo::regT0, JSEntryPtrTag);
 
+    CODEWATCH_JIT_STOP(&jit);
     jit.emitFunctionEpilogue();
     jit.ret();
     

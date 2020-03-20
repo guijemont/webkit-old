@@ -43,6 +43,7 @@
 #include "JSCJSValueInlines.h"
 #include "LinkBuffer.h"
 #include "MaxFrameExtentForSlowPathCall.h"
+#include "ProbeContext.h"
 #include "StructureStubInfo.h"
 #include "ThunkGenerators.h"
 #include "VM.h"
@@ -118,6 +119,7 @@ void JITCompiler::compileEntry()
     // check) which will be dependent on stack layout. (We'd need to account for this in
     // both normal return code and when jumping to an exception handler).
     emitFunctionPrologue();
+    CODEWATCH_DFG_START(this);
     emitPutToCallFrameHeader(m_codeBlock, CallFrameSlot::codeBlock);
 }
 

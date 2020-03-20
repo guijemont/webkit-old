@@ -31,6 +31,7 @@
 #include "JITInlines.h"
 #include "JSInterfaceJIT.h"
 #include "LinkBuffer.h"
+#include "ProbeContext.h"
 
 namespace JSC {
 
@@ -41,6 +42,7 @@ namespace JSC {
             : JSInterfaceJIT(vm)
         {
             emitFunctionPrologue();
+            CODEWATCH_JIT_START(this);
             emitSaveThenMaterializeTagRegisters();
             // Check that we have the expected number of arguments
             m_failures.append(branch32(NotEqual, payloadFor(CallFrameSlot::argumentCount), TrustedImm32(expectedArgCount + 1)));
@@ -50,6 +52,7 @@ namespace JSC {
             : JSInterfaceJIT(vm)
         {
             emitFunctionPrologue();
+            CODEWATCH_JIT_START(this);
             emitSaveThenMaterializeTagRegisters();
         }
         
@@ -104,6 +107,7 @@ namespace JSC {
                 move(src, regT0);
             
             emitRestoreSavedTagRegisters();
+            CODEWATCH_JIT_STOP(this);
             emitFunctionEpilogue();
             ret();
         }
@@ -113,6 +117,7 @@ namespace JSC {
             ASSERT_UNUSED(payload, payload == regT0);
             ASSERT_UNUSED(tag, tag == regT1);
             emitRestoreSavedTagRegisters();
+            CODEWATCH_JIT_STOP(this);
             emitFunctionEpilogue();
             ret();
         }
@@ -138,6 +143,7 @@ namespace JSC {
             highNonZero.link(this);
 #endif
             emitRestoreSavedTagRegisters();
+            CODEWATCH_JIT_STOP(this);
             emitFunctionEpilogue();
             ret();
         }
@@ -148,6 +154,7 @@ namespace JSC {
                 move(src, regT0);
             tagReturnAsInt32();
             emitRestoreSavedTagRegisters();
+            CODEWATCH_JIT_STOP(this);
             emitFunctionEpilogue();
             ret();
         }
@@ -158,6 +165,7 @@ namespace JSC {
                 move(src, regT0);
             tagReturnAsJSCell();
             emitRestoreSavedTagRegisters();
+            CODEWATCH_JIT_STOP(this);
             emitFunctionEpilogue();
             ret();
         }

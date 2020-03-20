@@ -40,6 +40,7 @@
 #include "JSPropertyNameEnumerator.h"
 #include "LinkBuffer.h"
 #include "MaxFrameExtentForSlowPathCall.h"
+#include "ProbeContext.h"
 #include "OpcodeInlines.h"
 #include "SlowPathCall.h"
 #include "TypeProfilerLog.h"
@@ -65,6 +66,7 @@ void JIT::emit_op_end(Instruction* currentInstruction)
     ASSERT(returnValueGPR != callFrameRegister);
     emitLoad(currentInstruction[1].u.operand, regT1, returnValueGPR);
     emitRestoreCalleeSaves();
+    CODEWATCH_JIT_STOP(this);
     emitFunctionEpilogue();
     ret();
 }

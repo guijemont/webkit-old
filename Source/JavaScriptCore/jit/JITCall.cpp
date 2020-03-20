@@ -216,18 +216,24 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
         shuffleData.setupCalleeSaveRegisters(m_codeBlock);
         info->setFrameShuffleData(shuffleData);
         CallFrameShuffler(*this, shuffleData).prepareForTailCall();
+        CODEWATCH_JIT_STOP(this);
         m_callCompilationInfo[callLinkInfoIndex].hotPathOther = emitNakedTailCall();
+        CODEWATCH_JIT_START(this);
         return;
     }
 
     if (opcodeID == op_tail_call_varargs || opcodeID == op_tail_call_forward_arguments) {
         emitRestoreCalleeSaves();
         prepareForTailCallSlow();
+        CODEWATCH_JIT_STOP(this);
         m_callCompilationInfo[callLinkInfoIndex].hotPathOther = emitNakedTailCall();
+        CODEWATCH_JIT_START(this);
         return;
     }
 
+    CODEWATCH_JIT_STOP(this);
     m_callCompilationInfo[callLinkInfoIndex].hotPathOther = emitNakedCall();
+    CODEWATCH_JIT_START(this);
 
     addPtr(TrustedImm32(stackPointerOffsetFor(m_codeBlock) * sizeof(Register)), callFrameRegister, stackPointerRegister);
     checkStackPointerAlignment();

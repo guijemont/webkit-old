@@ -150,6 +150,7 @@
 #include "WeakGCMapInlines.h"
 #include "WebAssemblyFunction.h"
 #include "WebAssemblyWrapperFunction.h"
+#include <wtf/Codewatch.h>
 #include <wtf/ProcessID.h>
 #include <wtf/ReadWriteLock.h>
 #include <wtf/SimpleStats.h>
@@ -525,6 +526,17 @@ VM::VM(VMType vmType, HeapType heapType)
         noJITValueProfileSingleton = std::make_unique<ValueProfile>(0);
 
     VMInspector::instance().add(this);
+
+    {
+        // This ensures that the Codewatch instances are created in the main JS
+        // thread, which should be the same as the one in which the first VM is
+        // created.
+        static std::once_flag onceKey;
+        std::call_once(onceKey, [] {
+                Codewatch<CodewatchType::JIT>::getCodewatch();
+                Codewatch<CodewatchType::DFG>::getCodewatch();
+            });
+    }
 }
 
 static ReadWriteLock s_destructionLock;

@@ -77,6 +77,7 @@
 #include "WeakMapImplInlines.h"
 #include "WeakSetInlines.h"
 #include <algorithm>
+#include <wtf/Codewatch.h>
 #include <wtf/ListDump.h>
 #include <wtf/MainThread.h>
 #include <wtf/ParallelVectorIterator.h>
@@ -374,6 +375,9 @@ bool Heap::isPagedOut(MonotonicTime deadline)
 // Run all pending finalizers now because we won't get another chance.
 void Heap::lastChanceToFinalize()
 {
+
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();
@@ -1007,6 +1011,8 @@ void Heap::addToRememberedSet(const JSCell* constCell)
 
 void Heap::sweepSynchronously()
 {
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     MonotonicTime before { };
     if (Options::logGC()) {
         dataLog("Full sweep: ", capacity() / 1024, "kb ");
@@ -1205,6 +1211,8 @@ NEVER_INLINE bool Heap::runNotRunningPhase(GCConductor conn)
 
 NEVER_INLINE bool Heap::runBeginPhase(GCConductor conn)
 {
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     m_currentGCStartTime = MonotonicTime::now();
     
     {
@@ -1614,6 +1622,8 @@ void Heap::stopThePeriphery(GCConductor conn)
     m_structureIDTable.flushOldTables();
     m_objectSpace.stopAllocating();
     
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     m_stopTime = MonotonicTime::now();
 }
 
@@ -2031,6 +2041,8 @@ void Heap::notifyThreadStopping(const AbstractLocker&)
 
 void Heap::finalize()
 {
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();
@@ -2780,6 +2792,8 @@ void Heap::addMarkingConstraint(std::unique_ptr<MarkingConstraint> constraint)
 
 void Heap::notifyIsSafeToCollect()
 {
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();

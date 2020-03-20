@@ -44,6 +44,7 @@
 #include "MaxFrameExtentForSlowPathCall.h"
 #include "ModuleProgramCodeBlock.h"
 #include "PCToCodeOriginMap.h"
+#include "ProbeContext.h"
 #include "ProfilerDatabase.h"
 #include "ProgramCodeBlock.h"
 #include "ResultType.h"
@@ -611,6 +612,8 @@ void JIT::privateCompileSlowCases()
 
 void JIT::compileWithoutLinking(JITCompilationEffort effort)
 {
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     MonotonicTime before { };
     if (UNLIKELY(computeCompileTimes()))
         before = MonotonicTime::now();
@@ -672,6 +675,7 @@ void JIT::compileWithoutLinking(JITCompilationEffort effort)
         nop();
 
     emitFunctionPrologue();
+    CODEWATCH_JIT_START(this);
     emitPutToCallFrameHeader(m_codeBlock, CallFrameSlot::codeBlock);
 
     Label beginLabel(this);
@@ -739,6 +743,7 @@ void JIT::compileWithoutLinking(JITCompilationEffort effort)
         m_arityCheck = label();
         store8(TrustedImm32(0), &m_codeBlock->m_shouldAlwaysBeInlined);
         emitFunctionPrologue();
+        CODEWATCH_JIT_START(this);
         emitPutToCallFrameHeader(m_codeBlock, CallFrameSlot::codeBlock);
 
         load32(payloadFor(CallFrameSlot::argumentCount), regT1);
