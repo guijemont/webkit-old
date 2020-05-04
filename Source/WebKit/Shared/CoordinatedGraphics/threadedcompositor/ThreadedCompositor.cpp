@@ -213,12 +213,15 @@ void ThreadedCompositor::renderLayerTree()
     if (m_nonCompositedWebGLEnabled) {
         renderNonCompositedWebGL();
 
+        auto& llintWatch = Codewatch<CodewatchType::LLInt>::getCodewatch();
         auto& jitWatch = Codewatch<CodewatchType::JIT>::getCodewatch();
         auto& dfgWatch = Codewatch<CodewatchType::DFG>::getCodewatch();
         auto now = MonotonicTime::now();
+        Seconds llintTime = llintWatch.reset();
         Seconds jitTime = jitWatch.reset();
         Seconds dfgTime = dfgWatch.reset();
         dataLogLn("Frame ", now.secondsSinceEpoch().value(),
+                " ", llintTime.value() * 1000.0,
                 " ", jitTime.value() * 1000.0,
                 " ", dfgTime.value() * 1000.0);
         return;

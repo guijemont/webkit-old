@@ -69,6 +69,7 @@
 #include "StructureRareDataInlines.h"
 #include "SuperSampler.h"
 #include "VMInlines.h"
+#include <wtf/Codewatch.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/StringPrintStream.h>
 
@@ -271,6 +272,25 @@ extern "C" SlowPathReturnType llint_trace_value(ExecState* exec, Instruction* pc
     LLINT_END_IMPL();
 }
 
+LLINT_SLOW_PATH_DECL(codewatch_start)
+{
+    UNUSED_PARAM(exec);
+    //dataLogF("codewatch_start exec=%p pc=%p\n", exec, pc);
+    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
+    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
+    Codewatch<CodewatchType::LLInt>::getCodewatch().start(WTF_PRETTY_FUNCTION, pc); \
+    LLINT_END_IMPL();
+}
+
+LLINT_SLOW_PATH_DECL(codewatch_stop)
+{
+    UNUSED_PARAM(exec);
+    //dataLogF("codewatch_stop  exec=%p pc=%p\n", exec, pc);
+    Codewatch<CodewatchType::LLInt>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
+    LLINT_END_IMPL();
+}
+
+
 LLINT_SLOW_PATH_DECL(trace_prologue)
 {
     if (!Options::traceLLIntExecution())
@@ -390,7 +410,9 @@ inline bool jitCompileAndSetHeuristics(CodeBlock* codeBlock, ExecState* exec, un
         return true;
     }
     case JITCode::InterpreterThunk: {
+        Codewatch<CodewatchType::LLInt>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
         JITWorklist::instance()->compileLater(codeBlock, loopOSREntryBytecodeOffset);
+        Codewatch<CodewatchType::LLInt>::getCodewatch().start(WTF_PRETTY_FUNCTION, 0);
         return codeBlock->jitType() == JITCode::BaselineJIT;
     }
     default:

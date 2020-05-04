@@ -33,6 +33,7 @@
 
 #define CODEWATCH_START(jit, currentFunction, outType, inType) do { \
     (jit)->probe([&] (Probe::Context& c) { \
+            Codewatch<CodewatchType::LLInt>::getCodewatch().stop(currentFunction, c.pc()); \
             Codewatch<outType>::getCodewatch().stop(currentFunction, c.pc()); \
             Codewatch<inType>::getCodewatch().start(currentFunction, c.pc()); \
             }); \

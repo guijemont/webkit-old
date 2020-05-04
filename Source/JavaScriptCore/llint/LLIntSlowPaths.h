@@ -46,6 +46,8 @@ extern "C" void llint_write_barrier_slow(ExecState*, JSCell*) WTF_INTERNAL;
 #define LLINT_SLOW_PATH_HIDDEN_DECL(name) \
     LLINT_SLOW_PATH_DECL(name) WTF_INTERNAL
 
+LLINT_SLOW_PATH_HIDDEN_DECL(codewatch_start);
+LLINT_SLOW_PATH_HIDDEN_DECL(codewatch_stop);
 LLINT_SLOW_PATH_HIDDEN_DECL(trace_prologue);
 LLINT_SLOW_PATH_HIDDEN_DECL(trace_prologue_function_for_call);
 LLINT_SLOW_PATH_HIDDEN_DECL(trace_prologue_function_for_construct);

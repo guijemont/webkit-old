@@ -31,7 +31,7 @@
 
 namespace WTF {
 
-enum class CodewatchType { JIT, DFG };
+enum class CodewatchType { LLInt, JIT, DFG };
 
 template <CodewatchType T>
 class Codewatch {

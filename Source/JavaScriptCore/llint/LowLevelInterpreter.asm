@@ -844,13 +844,31 @@ macro traceExecution()
     end
 end
 
+macro codewatchStart()
+    push r0, r1
+    subp maxFrameExtentForSlowPathCall, sp
+    callSlowPath(_llint_codewatch_start)
+    addp maxFrameExtentForSlowPathCall, sp
+    pop r1, r0
+end
+
+macro codewatchStop()
+    push r0, r1
+    subp maxFrameExtentForSlowPathCall, sp
+    callSlowPath(_llint_codewatch_stop)
+    addp maxFrameExtentForSlowPathCall, sp
+    pop r1, r0
+end
+
 macro callTargetFunction(callee, callPtrTag)
+    codewatchStop()
     if C_LOOP
         cloopCallJSFunction callee
     else
         call callee, callPtrTag
     end
     restoreStackPointerAfterCall()
+    codewatchStart()
     dispatchAfterCall()
 end
 
@@ -913,6 +931,7 @@ macro prepareForTailCall(callee, temp1, temp2, temp3, callPtrTag)
 end
 
 macro slowPathForCall(slowPath, prepareCall)
+    codewatchStop()
     callCallSlowPath(
         slowPath,
         # Those are r0 and r1
@@ -923,6 +942,7 @@ macro slowPathForCall(slowPath, prepareCall)
         .dontUpdateSP:
             callTargetFunction(callee, SlowPathPtrTag)
         end)
+    codewatchStart()
 end
 
 macro arrayProfile(cellAndIndexingType, profile, scratch)
@@ -1006,11 +1026,12 @@ macro prologue(codeBlockGetter, codeBlockSetter, osrSlowPath, traceSlowPath)
     tagReturnAddress sp
     preserveCallerPCAndCFR()
 
+    subp maxFrameExtentForSlowPathCall, sp
     if TRACING
-        subp maxFrameExtentForSlowPathCall, sp
         callSlowPath(traceSlowPath)
-        addp maxFrameExtentForSlowPathCall, sp
     end
+    callSlowPath(_llint_codewatch_start)
+    addp maxFrameExtentForSlowPathCall, sp
     codeBlockGetter(t1, t2)
     if not C_LOOP
         baddis 5, CodeBlock::m_llintExecuteCounter + BaselineExecutionCounter::m_counter[t1], .continue
@@ -1143,6 +1164,7 @@ macro functionInitialization(profileArgSkip)
 end
 
 macro doReturn()
+    codewatchStop()
     restoreCalleeSavesUsedByLLInt()
     restoreCallerPCAndCFR()
     ret
@@ -1866,6 +1888,7 @@ _llint_op_call_eval:
 
 
 _llint_generic_return_point:
+    codewatchStart()
     dispatchAfterCall()
 
 
