@@ -31,25 +31,23 @@
 
 #if ENABLE(MASM_PROBE)
 
-#define CODEWATCH_START(jit, currentFunction, outType, inType) do { \
+#define CODEWATCH_START(jit, currentFunction, type) do { \
     (jit)->probe([&] (Probe::Context& c) { \
-            Codewatch<CodewatchType::LLInt>::getCodewatch().stop(currentFunction, c.pc()); \
-            Codewatch<outType>::getCodewatch().stop(currentFunction, c.pc()); \
-            Codewatch<inType>::getCodewatch().start(currentFunction, c.pc()); \
+            Codewatch<type>::getCodewatch().exclusiveStart(currentFunction, c.pc()); \
             }); \
     } while(0)
 
-#define CODEWATCH_STOP(jit, currentFunction, outType) do { \
+#define CODEWATCH_STOP(jit, currentFunction, type) do { \
     (jit)->probe([&] (Probe::Context& c) { \
-            Codewatch<outType>::getCodewatch().stop(currentFunction, c.pc()); \
+            Codewatch<type>::getCodewatch().stop(currentFunction, c.pc()); \
             }); \
     } while(0)
 
 
-#define CODEWATCH_JIT_START(jit) CODEWATCH_START(jit, WTF_PRETTY_FUNCTION, CodewatchType::DFG, CodewatchType::JIT)
+#define CODEWATCH_JIT_START(jit) CODEWATCH_START(jit, WTF_PRETTY_FUNCTION, CodewatchType::JIT)
 #define CODEWATCH_JIT_STOP(jit) CODEWATCH_STOP(jit, WTF_PRETTY_FUNCTION, CodewatchType::JIT)
 
-#define CODEWATCH_DFG_START(jit) CODEWATCH_START(jit, WTF_PRETTY_FUNCTION, CodewatchType::JIT, CodewatchType::DFG)
+#define CODEWATCH_DFG_START(jit) CODEWATCH_START(jit, WTF_PRETTY_FUNCTION, CodewatchType::DFG)
 #define CODEWATCH_DFG_STOP(jit) CODEWATCH_STOP(jit, WTF_PRETTY_FUNCTION, CodewatchType::DFG)
 
 namespace JSC {

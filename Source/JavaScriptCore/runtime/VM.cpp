@@ -533,9 +533,7 @@ VM::VM(VMType vmType, HeapType heapType)
         // created.
         static std::once_flag onceKey;
         std::call_once(onceKey, [] {
-                Codewatch<CodewatchType::LLInt>::getCodewatch();
-                Codewatch<CodewatchType::JIT>::getCodewatch();
-                Codewatch<CodewatchType::DFG>::getCodewatch();
+                Codewatch<CodewatchType::LastCodewatchType>::initializeAll();
             });
     }
 }

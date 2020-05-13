@@ -271,9 +271,9 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     store32(regT1, Address(stackPointerRegister, CallFrameSlot::callee * static_cast<int>(sizeof(Register)) + TagOffset - sizeof(CallerFrameAndPC)));
 
     if (opcodeID == op_call_eval) {
-        // XXX CODEWATCH_JIT_STOP(this);
+        CODEWATCH_JIT_STOP(this);
         compileCallEval(instruction);
-        // XXX CODEWATCH_JIT_START(this);
+        CODEWATCH_JIT_START(this);
         return;
     }
 

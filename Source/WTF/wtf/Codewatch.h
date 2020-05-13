@@ -25,23 +25,58 @@
 
 #pragma once
 #include <wtf/DataLog.h>
+#include <wtf/Function.h>
 #include <wtf/Lock.h>
 #include <wtf/Stopwatch.h>
 #include <wtf/Threading.h>
 
 namespace WTF {
 
-enum class CodewatchType { LLInt, JIT, DFG };
+#define FOR_EACH_CODEWATCH_TYPE(macro) \
+    macro(Parser) \
+    macro(LLInt) \
+    macro(JITCompilation) \
+    macro(JIT) \
+    macro(DFGCompilation) \
+    macro(DFG) \
+    macro(GC)
+
+enum class CodewatchType {
+#define CODEWATCH_TYPE_ENUM(type) type,
+    FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+        LastCodewatchType
+};
+
+inline const char* codewatchTypeName(CodewatchType t)
+{
+    switch (t) {
+#define CODEWATCH_TYPE_ENUM(type) case CodewatchType::type: return #type;
+    FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+        default:
+        RELEASE_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+}
 
 template <CodewatchType T>
 class Codewatch {
     public:
         static inline Codewatch& getCodewatch() {
+            static_assert(T < CodewatchType::LastCodewatchType);
             if (!m_codewatch) {
                 m_codewatch = new Codewatch<T>();
                 dataLogF("[%p] Creating new Codewatch<%d>: %p\n", &Thread::current(), static_cast<int>(T), m_codewatch);
             }
             return *m_codewatch;
+        }
+
+        static inline void initializeAll() {
+#define CODEWATCH_TYPE_ENUM(type) \
+                Codewatch<CodewatchType::type>::getCodewatch();
+            FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
         }
 
         inline Seconds reset() {
@@ -57,8 +92,13 @@ class Codewatch {
             return elapsedTimeBeforeReset;
         }
 
-        inline void start(const char *origin, void* pc) {
-            bool isExpectedThread = (m_thread.get() == &Thread::current());
+        inline bool isInOriginalThread() {
+            return (m_thread.get() == &Thread::current());
+        }
+
+
+        inline void start(const char* origin, void* pc) {
+            bool isExpectedThread = isInOriginalThread();
             //dataLogF("Codewatch.start;%p;%d;%s;%p\n", &Thread::current(), isExpectedThread, origin, pc);
             if (!isExpectedThread) {
                 return;
@@ -68,8 +108,15 @@ class Codewatch {
             m_lock.unlock();
         }
 
-        inline void stop(const char *origin, void* pc) {
-            bool isExpectedThread = (m_thread.get() == &Thread::current());
+        inline void exclusiveStart(const char* origin, void* pc, bool failIfNotExclusive=false) {
+            if (failIfNotExclusive && isInOriginalThread())
+                RELEASE_ASSERT(!isAnyActive());
+            stopOthers(origin, pc);
+            start(origin, pc);
+        }
+
+        inline void stop(const char* origin, void* pc) {
+            bool isExpectedThread = isInOriginalThread();
             //dataLogF("Codewatch.stop;%p;%d;%s;%p\n", &Thread::current(), isExpectedThread, origin, pc);
             if (!isExpectedThread) {
                 return;
@@ -84,10 +131,44 @@ class Codewatch {
             m_lock.unlock();
         }
 
+        static inline void stopOthers(const char* origin, void* pc) {
+#define CODEWATCH_TYPE_ENUM(type) \
+            if (T != CodewatchType::type) \
+                Codewatch<CodewatchType::type>::getCodewatch().stop(origin, pc);
+            FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+        }
+
+        static inline void stopAll(const char* origin, void *pc) {
+#define CODEWATCH_TYPE_ENUM(type) \
+                    Codewatch<CodewatchType::type>::getCodewatch().stop(origin, pc);
+                FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+        }
+
+        static inline bool isAnyActive() {
+#define CODEWATCH_TYPE_ENUM(type) \
+            if (Codewatch<CodewatchType::type>::getCodewatch().isActive()) return true;
+            FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+            return false;
+        }
+
         inline Seconds elapsedTime() { return m_stopWatch->elapsedTime(); }
         inline bool isActive() { return m_stopWatch->isActive(); }
 
     private:
+        /*
+        template<typename F>
+        inline void forAllOtherCodewatchTypes(F callback) {
+#define CODEWATCH_TYPE_ENUM(type) \
+                if (T != CodewatchType::type) \
+                    callback(Codewatch<CodewatchType::type>::getCodewatch());
+                FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+        }
+        */
+
         Codewatch() : m_stopWatch(Stopwatch::create()), m_lastPc(0), m_thread(&Thread::current()) { }
 
         inline void startImpl(const char *origin, void* pc) {
@@ -108,6 +189,18 @@ class Codewatch {
 
 template <CodewatchType T>
 Codewatch<T>* Codewatch<T>::m_codewatch = 0;
+
+/*
+template<typename F>
+inline void forAllOtherCodewatchTypes(CodewatchType t, F callback) {
+#define CODEWATCH_TYPE_ENUM(type) \
+    if (t != CodewatchType::type) \
+        callback(Codewatch<CodewatchType::type>::getCodewatch());
+    FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+}
+*/
+
 
 }
 

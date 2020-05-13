@@ -213,17 +213,48 @@ void ThreadedCompositor::renderLayerTree()
     if (m_nonCompositedWebGLEnabled) {
         renderNonCompositedWebGL();
 
-        auto& llintWatch = Codewatch<CodewatchType::LLInt>::getCodewatch();
-        auto& jitWatch = Codewatch<CodewatchType::JIT>::getCodewatch();
-        auto& dfgWatch = Codewatch<CodewatchType::DFG>::getCodewatch();
         auto now = MonotonicTime::now();
+#define CODEWATCH_TYPE_ENUM(type) \
+        auto& watchFor##type = Codewatch<CodewatchType::type>::getCodewatch(); \
+        Seconds timeFor##type = watchFor##type.reset();
+        FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+#undef CODEWATCH_TYPE_ENUM
+
+    {
+        static std::once_flag onceKey;
+        std::call_once(onceKey, [] {
+#define CODEWATCH_TYPE_ENUM(type) \
+            " "#type,
+            dataLogLn("Frame TimeStamp",
+                FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+                "");
+#undef CODEWATCH_TYPE_ENUM
+            });
+    }
+
+#define CODEWATCH_TYPE_ENUM(type) \
+            " ", timeFor##type.value() * 1000.0,
+        dataLogLn("Frame ", now.secondsSinceEpoch().value(),
+                FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
+                "");
+#undef CODEWATCH_TYPE_ENUM
+        /*
+        auto& jitCompWatch = Codewatch<CodewatchType::JITCompilation>::getCodewatch();
+        auto& jitWatch = Codewatch<CodewatchType::JIT>::getCodewatch();
+        auto& dfgCompWatch = Codewatch<CodewatchType::DFGCompilation>::getCodewatch();
+        auto& dfgWatch = Codewatch<CodewatchType::DFG>::getCodewatch();
         Seconds llintTime = llintWatch.reset();
+        Seconds jitCompTime = jitCompWatch.reset();
         Seconds jitTime = jitWatch.reset();
+        Seconds dfgCompTime = dfgCompWatch.reset();
         Seconds dfgTime = dfgWatch.reset();
         dataLogLn("Frame ", now.secondsSinceEpoch().value(),
                 " ", llintTime.value() * 1000.0,
+                " ", jitCompTime.value() * 1000.0,
                 " ", jitTime.value() * 1000.0,
+                " ", dfgCompTime.value() * 1000.0,
                 " ", dfgTime.value() * 1000.0);
+        */
         return;
     }
 

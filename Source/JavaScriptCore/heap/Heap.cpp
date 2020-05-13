@@ -376,8 +376,7 @@ bool Heap::isPagedOut(MonotonicTime deadline)
 void Heap::lastChanceToFinalize()
 {
 
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, true);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();
@@ -463,6 +462,7 @@ void Heap::lastChanceToFinalize()
     
     m_objectSpace.freeMemory();
     
+    Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     if (Options::logGC())
         dataLog((MonotonicTime::now() - before).milliseconds(), "ms]\n");
 }
@@ -1011,8 +1011,7 @@ void Heap::addToRememberedSet(const JSCell* constCell)
 
 void Heap::sweepSynchronously()
 {
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, true);
     MonotonicTime before { };
     if (Options::logGC()) {
         dataLog("Full sweep: ", capacity() / 1024, "kb ");
@@ -1020,6 +1019,7 @@ void Heap::sweepSynchronously()
     }
     m_objectSpace.sweep();
     m_objectSpace.shrink();
+    Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     if (Options::logGC()) {
         MonotonicTime after = MonotonicTime::now();
         dataLog("=> ", capacity() / 1024, "kb, ", (after - before).milliseconds(), "ms");
@@ -1211,8 +1211,7 @@ NEVER_INLINE bool Heap::runNotRunningPhase(GCConductor conn)
 
 NEVER_INLINE bool Heap::runBeginPhase(GCConductor conn)
 {
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::LastCodewatchType>::stopAll(WTF_PRETTY_FUNCTION, 0);
     m_currentGCStartTime = MonotonicTime::now();
     
     {
@@ -1526,6 +1525,7 @@ NEVER_INLINE bool Heap::runEndPhase(GCConductor conn)
     m_lastGCEndTime = MonotonicTime::now();
     m_totalGCTime += m_lastGCEndTime - m_lastGCStartTime;
         
+    Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     return changePhase(conn, CollectorPhase::NotRunning);
 }
 
@@ -1592,6 +1592,7 @@ void Heap::stopThePeriphery(GCConductor conn)
         dataLog("FATAL: world already stopped.\n");
         RELEASE_ASSERT_NOT_REACHED();
     }
+    Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, false);
     
     if (m_mutatorDidRun)
         m_mutatorExecutionVersion++;
@@ -1622,8 +1623,6 @@ void Heap::stopThePeriphery(GCConductor conn)
     m_structureIDTable.flushOldTables();
     m_objectSpace.stopAllocating();
     
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     m_stopTime = MonotonicTime::now();
 }
 
@@ -1778,8 +1777,11 @@ bool Heap::stopIfNecessarySlow(unsigned oldState)
     // prevent us from polling this so much. Ideally, stopIfNecessary would ignore the mutatorHasConnBit
     // and there would be some other bit indicating whether we were in some GC phase other than the
     // NotRunning or Concurrent ones.
-    if (oldState & mutatorHasConnBit)
+    if (oldState & mutatorHasConnBit) {
+        Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, false);
         collectInMutatorThread();
+        Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    }
     
     return false;
 }
@@ -2041,8 +2043,7 @@ void Heap::notifyThreadStopping(const AbstractLocker&)
 
 void Heap::finalize()
 {
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, true);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();
@@ -2067,6 +2068,7 @@ void Heap::finalize()
     if (shouldSweepSynchronously())
         sweepSynchronously();
 
+    Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     if (Options::logGC()) {
         MonotonicTime after = MonotonicTime::now();
         dataLog((after - before).milliseconds(), "ms]\n");
@@ -2792,8 +2794,7 @@ void Heap::addMarkingConstraint(std::unique_ptr<MarkingConstraint> constraint)
 
 void Heap::notifyIsSafeToCollect()
 {
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch<CodewatchType::GC>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0, true);
     MonotonicTime before;
     if (Options::logGC()) {
         before = MonotonicTime::now();
@@ -2835,6 +2836,7 @@ void Heap::notifyIsSafeToCollect()
             });
     }
     
+    Codewatch<CodewatchType::GC>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
     if (Options::logGC())
         dataLog((MonotonicTime::now() - before).milliseconds(), "ms]\n");
 }
