@@ -176,7 +176,7 @@ void Plan::compileInThread(ThreadData* threadData)
 
     MonotonicTime before { };
     CString codeBlockName;
-    Codewatch<CodewatchType::DFGCompilation>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0);
+    Codewatch::exclusiveStart(CodewatchType::DFGCompilation, WTF_PRETTY_FUNCTION, nullptr);
     if (UNLIKELY(computeCompileTimes()))
         before = MonotonicTime::now();
     if (UNLIKELY(reportCompileTimes()))
@@ -223,7 +223,7 @@ void Plan::compileInThread(ThreadData* threadData)
         RELEASE_ASSERT_NOT_REACHED();
         break;
     }
-    Codewatch<CodewatchType::DFGCompilation>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch::stop(CodewatchType::DFGCompilation, WTF_PRETTY_FUNCTION, nullptr);
     if (m_codeBlock) { // m_codeBlock will be null if the compilation was cancelled.
         if (path == FTLPath)
             CODEBLOCK_LOG_EVENT(m_codeBlock, "ftlCompile", ("took ", (after - before).milliseconds(), " ms (DFG: ", (m_timeBeforeFTL - before).milliseconds(), ", B3: ", (after - m_timeBeforeFTL).milliseconds(), ") with ", pathName));

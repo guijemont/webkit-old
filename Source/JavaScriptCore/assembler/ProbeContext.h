@@ -33,13 +33,13 @@
 
 #define CODEWATCH_START(jit, currentFunction, type) do { \
     (jit)->probe([&] (Probe::Context& c) { \
-            Codewatch<type>::getCodewatch().exclusiveStart(currentFunction, c.pc()); \
+            Codewatch::exclusiveStart(type, currentFunction, c.pc()); \
             }); \
     } while(0)
 
 #define CODEWATCH_STOP(jit, currentFunction, type) do { \
     (jit)->probe([&] (Probe::Context& c) { \
-            Codewatch<type>::getCodewatch().stop(currentFunction, c.pc()); \
+            Codewatch::stop(type, currentFunction, c.pc()); \
             }); \
     } while(0)
 

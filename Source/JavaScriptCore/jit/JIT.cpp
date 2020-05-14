@@ -612,7 +612,7 @@ void JIT::privateCompileSlowCases()
 
 void JIT::compileWithoutLinking(JITCompilationEffort effort)
 {
-    Codewatch<CodewatchType::JITCompilation>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, 0);
+    Codewatch::exclusiveStart(CodewatchType::JITCompilation, WTF_PRETTY_FUNCTION, nullptr);
     MonotonicTime before { };
     if (UNLIKELY(computeCompileTimes()))
         before = MonotonicTime::now();
@@ -777,7 +777,7 @@ void JIT::compileWithoutLinking(JITCompilationEffort effort)
 
     m_linkBuffer = std::unique_ptr<LinkBuffer>(new LinkBuffer(*this, m_codeBlock, effort));
 
-    Codewatch<CodewatchType::JITCompilation>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+    Codewatch::stop(CodewatchType::JITCompilation, WTF_PRETTY_FUNCTION, nullptr);
     MonotonicTime after { };
     if (UNLIKELY(computeCompileTimes())) {
         after = MonotonicTime::now();

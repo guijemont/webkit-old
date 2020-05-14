@@ -276,9 +276,7 @@ LLINT_SLOW_PATH_DECL(codewatch_start)
 {
     UNUSED_PARAM(exec);
     //dataLogF("codewatch_start exec=%p pc=%p\n", exec, pc);
-    Codewatch<CodewatchType::JIT>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
-    Codewatch<CodewatchType::DFG>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
-    Codewatch<CodewatchType::LLInt>::getCodewatch().start(WTF_PRETTY_FUNCTION, pc); \
+    Codewatch::exclusiveStart(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, pc);
     LLINT_END_IMPL();
 }
 
@@ -286,7 +284,7 @@ LLINT_SLOW_PATH_DECL(codewatch_stop)
 {
     UNUSED_PARAM(exec);
     //dataLogF("codewatch_stop  exec=%p pc=%p\n", exec, pc);
-    Codewatch<CodewatchType::LLInt>::getCodewatch().stop(WTF_PRETTY_FUNCTION, pc); \
+    Codewatch::stop(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, pc);
     LLINT_END_IMPL();
 }
 
@@ -410,9 +408,9 @@ inline bool jitCompileAndSetHeuristics(CodeBlock* codeBlock, ExecState* exec, un
         return true;
     }
     case JITCode::InterpreterThunk: {
-        Codewatch<CodewatchType::LLInt>::getCodewatch().stop(WTF_PRETTY_FUNCTION, 0);
+        Codewatch::stop(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr);
         JITWorklist::instance()->compileLater(codeBlock, loopOSREntryBytecodeOffset);
-        Codewatch<CodewatchType::LLInt>::getCodewatch().start(WTF_PRETTY_FUNCTION, 0);
+        Codewatch::start(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr);
         return codeBlock->jitType() == JITCode::BaselineJIT;
     }
     default:

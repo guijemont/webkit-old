@@ -1955,7 +1955,7 @@ std::unique_ptr<ParsedNode> parse(
     ASSERT(!source.provider()->source().isNull());
 
     MonotonicTime before;
-    Codewatch<CodewatchType::Parser>::getCodewatch().exclusiveStart(WTF_PRETTY_FUNCTION, nullptr);
+    Codewatch::exclusiveStart(CodewatchType::Parser, WTF_PRETTY_FUNCTION, nullptr);
     if (UNLIKELY(Options::reportParseTimes()))
         before = MonotonicTime::now();
 
@@ -1980,7 +1980,7 @@ std::unique_ptr<ParsedNode> parse(
             *positionBeforeLastNewline = parser.positionBeforeLastNewline();
     }
 
-    Codewatch<CodewatchType::Parser>::getCodewatch().stop(WTF_PRETTY_FUNCTION, nullptr);
+    Codewatch::stop(CodewatchType::Parser, WTF_PRETTY_FUNCTION, nullptr);
     if (UNLIKELY(Options::reportParseTimes())) {
         MonotonicTime after = MonotonicTime::now();
         ParseHash hash(source);

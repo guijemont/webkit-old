@@ -333,6 +333,7 @@ set(WTF_SOURCES
     BitVector.cpp
     CPUTime.cpp
     ClockType.cpp
+    Codewatch.cpp
     CompilationThread.cpp
     ConcurrentPtrHashSet.cpp
     CountingLock.cpp
