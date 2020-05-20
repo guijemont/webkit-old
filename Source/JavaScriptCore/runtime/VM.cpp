@@ -377,6 +377,15 @@ VM::VM(VMType vmType, HeapType heapType)
     , m_controlFlowProfilerEnabledCount(0)
     , m_shadowChicken(std::make_unique<ShadowChicken>())
 {
+    {
+        // This ensures that the Codewatch instances are created in the main JS
+        // thread, which should be the same as the one in which the first VM is
+        // created.
+        static std::once_flag onceKey;
+        std::call_once(onceKey, [] {
+                Codewatch::initialize();
+            });
+    }
     interpreter = new Interpreter(*this);
     StackBounds stack = Thread::current().stack();
     updateSoftReservedZoneSize(Options::softReservedZoneSize());
@@ -527,15 +536,6 @@ VM::VM(VMType vmType, HeapType heapType)
 
     VMInspector::instance().add(this);
 
-    {
-        // This ensures that the Codewatch instances are created in the main JS
-        // thread, which should be the same as the one in which the first VM is
-        // created.
-        static std::once_flag onceKey;
-        std::call_once(onceKey, [] {
-                Codewatch::initialize();
-            });
-    }
 }
 
 static ReadWriteLock s_destructionLock;

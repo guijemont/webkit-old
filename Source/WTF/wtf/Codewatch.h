@@ -27,6 +27,7 @@
 #include <wtf/DataLog.h>
 #include <wtf/Function.h>
 #include <wtf/Lock.h>
+#include <wtf/Optional.h>
 #include <wtf/Seconds.h>
 #include <wtf/Stopwatch.h>
 #include <wtf/Threading.h>
@@ -67,14 +68,14 @@ class Codewatch {
         static inline void initialize();
 
         static inline void start(CodewatchType type, const char* origin, void* pc);
-        static inline void exclusiveStart(CodewatchType type, const char* origin, void* pc, bool failIfNotExclusive=false);
+        static inline std::optional<CodewatchType> exclusiveStart(CodewatchType type, const char* origin, void* pc, bool failIfNotExclusive=false);
         static inline void stop(CodewatchType type, const char* origin, void* pc);
 
         /* Note: this method can be called from other threads, whereas other
          * methods will be no-ops from other threads */
         static inline Seconds reset(CodewatchType type);
 
-        static inline void stopOthers(CodewatchType type, const char* origin, void* pc);
+        static inline std::optional<CodewatchType> stopOthers(CodewatchType type, const char* origin, void* pc);
         static inline void stopAll(const char* origin, void *pc);
 
         static inline bool isAnyActive();
@@ -153,7 +154,11 @@ inline void Codewatch::initialize() {
 }
 
 inline void Codewatch::start(CodewatchType type, const char* origin, void* pc) {
+    RELEASE_ASSERT(m_initialized);
     Codewatch& codewatch = get(type);
+    if (codewatch.isActive())
+        return;
+    RELEASE_ASSERT(!isAnyActive());
     bool isExpectedThread = isInOriginalThread();
     //dataLogF("Codewatch.start;%p;%d;%s;%p\n", &Thread::current(), isExpectedThread, origin, pc);
     if (!isExpectedThread) {
@@ -165,6 +170,7 @@ inline void Codewatch::start(CodewatchType type, const char* origin, void* pc) {
 }
 
 inline void Codewatch::stop(CodewatchType type, const char* origin, void* pc) {
+    RELEASE_ASSERT(m_initialized);
     Codewatch& codewatch = get(type);
     bool isExpectedThread = isInOriginalThread();
     //dataLogF("Codewatch.stop;%p;%d;%s;%p\n", &Thread::current(), isExpectedThread, origin, pc);
@@ -179,6 +185,7 @@ inline void Codewatch::stop(CodewatchType type, const char* origin, void* pc) {
 
 /* Note: this method can be called from other threads */
 inline Seconds Codewatch::reset(CodewatchType type) {
+    RELEASE_ASSERT(m_initialized);
     Seconds retval;
     Codewatch& codewatch = get(type);
     m_lock.lock();
@@ -187,15 +194,22 @@ inline Seconds Codewatch::reset(CodewatchType type) {
     return retval;
 }
 
-inline void Codewatch::stopOthers(CodewatchType type, const char* origin, void* pc) {
+inline std::optional<CodewatchType> Codewatch::stopOthers(CodewatchType type, const char* origin, void* pc) {
+    RELEASE_ASSERT(m_initialized);
+    std::optional<CodewatchType> ret = std::nullopt;
 #define CODEWATCH_TYPE_ENUM(_type) \
-    if (type != CodewatchType::_type) \
-    stop(CodewatchType::_type, origin, pc);
+    if (type != CodewatchType::_type && get(CodewatchType::_type).isActive()){ \
+        RELEASE_ASSERT(!ret); /* no more than one Codewatch can be running at once */ \
+        ret = std::optional<CodewatchType>({CodewatchType::_type}); \
+        stop(CodewatchType::_type, origin, pc); \
+    }
     FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
 #undef CODEWATCH_TYPE_ENUM
+    return ret;
 }
 
 inline void Codewatch::stopAll(const char* origin, void *pc) {
+    RELEASE_ASSERT(m_initialized);
 #define CODEWATCH_TYPE_ENUM(type) \
     stop(CodewatchType::type, origin, pc);
     FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
@@ -203,6 +217,7 @@ inline void Codewatch::stopAll(const char* origin, void *pc) {
 }
 
 inline bool Codewatch::isAnyActive() {
+    RELEASE_ASSERT(m_initialized);
 #define CODEWATCH_TYPE_ENUM(type) \
     if (get(CodewatchType::type).isActive()) return true;
     FOR_EACH_CODEWATCH_TYPE(CODEWATCH_TYPE_ENUM)
@@ -210,14 +225,19 @@ inline bool Codewatch::isAnyActive() {
         return false;
 }
 
-inline void Codewatch::exclusiveStart(CodewatchType type, const char* origin, void* pc, bool failIfNotExclusive) {
-    if (failIfNotExclusive && isInOriginalThread())
-        RELEASE_ASSERT(!isAnyActive());
-    stopOthers(type, origin, pc);
+inline std::optional<CodewatchType> Codewatch::exclusiveStart(CodewatchType type, const char* origin, void* pc, bool failIfNotExclusive) {
+    RELEASE_ASSERT(m_initialized);
+    if (!isInOriginalThread())
+        return std::nullopt;
+    auto ret = stopOthers(type, origin, pc);
+    if (failIfNotExclusive)
+        RELEASE_ASSERT(!ret);
     start(type, origin, pc);
+    return ret;
 }
 
 inline void Codewatch::logHeader() {
+    RELEASE_ASSERT(m_initialized);
 #define CODEWATCH_TYPE_ENUM(type) \
     " "#type,
     dataLogLn("Frame TimeStamp",
@@ -227,6 +247,7 @@ inline void Codewatch::logHeader() {
 }
 
 inline void Codewatch::resetAllAndLog() {
+    RELEASE_ASSERT(m_initialized);
     auto now = MonotonicTime::now();
 #define CODEWATCH_TYPE_ENUM(type) \
     Seconds timeFor##type = Codewatch::reset(CodewatchType::type);

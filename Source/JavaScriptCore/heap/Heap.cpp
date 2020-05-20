@@ -1211,7 +1211,8 @@ NEVER_INLINE bool Heap::runNotRunningPhase(GCConductor conn)
 
 NEVER_INLINE bool Heap::runBeginPhase(GCConductor conn)
 {
-    Codewatch::stopAll(WTF_PRETTY_FUNCTION, nullptr);
+    //Codewatch::stopAll(WTF_PRETTY_FUNCTION, nullptr);
+    Codewatch::exclusiveStart(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr, true);
     m_currentGCStartTime = MonotonicTime::now();
     
     {
@@ -1592,7 +1593,7 @@ void Heap::stopThePeriphery(GCConductor conn)
         dataLog("FATAL: world already stopped.\n");
         RELEASE_ASSERT_NOT_REACHED();
     }
-    Codewatch::exclusiveStart(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr, false);
+    Codewatch::exclusiveStart(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr, true);
     
     if (m_mutatorDidRun)
         m_mutatorExecutionVersion++;
@@ -1778,9 +1779,11 @@ bool Heap::stopIfNecessarySlow(unsigned oldState)
     // and there would be some other bit indicating whether we were in some GC phase other than the
     // NotRunning or Concurrent ones.
     if (oldState & mutatorHasConnBit) {
-        Codewatch::exclusiveStart(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr, false);
+        auto toResume = Codewatch::exclusiveStart(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr, false);
         collectInMutatorThread();
         Codewatch::stop(CodewatchType::GC, WTF_PRETTY_FUNCTION, nullptr);
+        if (toResume)
+            Codewatch::start(toResume.value(), WTF_PRETTY_FUNCTION, nullptr);
     }
     
     return false;

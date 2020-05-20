@@ -408,9 +408,9 @@ inline bool jitCompileAndSetHeuristics(CodeBlock* codeBlock, ExecState* exec, un
         return true;
     }
     case JITCode::InterpreterThunk: {
-        Codewatch::stop(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr);
+        //Codewatch::stop(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr);
         JITWorklist::instance()->compileLater(codeBlock, loopOSREntryBytecodeOffset);
-        Codewatch::start(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr);
+        Codewatch::exclusiveStart(CodewatchType::LLInt, WTF_PRETTY_FUNCTION, nullptr, true);
         return codeBlock->jitType() == JITCode::BaselineJIT;
     }
     default:
