@@ -5752,34 +5752,7 @@ private:
     void compileSpread()
     {
         if (m_node->child1()->op() == PhantomNewArrayBuffer) {
-            LBasicBlock slowAllocation = m_out.newBlock();
-            LBasicBlock continuation = m_out.newBlock();
-
-            auto* immutableButterfly = m_node->child1()->castOperand<JSImmutableButterfly*>();
-
-            LValue fastFixedArrayValue = allocateVariableSizedCell<JSFixedArray>(
-                m_out.constIntPtr(JSFixedArray::allocationSize(immutableButterfly->length()).unsafeGet()),
-                m_graph.m_vm.fixedArrayStructure.get(), slowAllocation);
-            m_out.store32(m_out.constInt32(immutableButterfly->length()), fastFixedArrayValue, m_heaps.JSFixedArray_size);
-            ValueFromBlock fastFixedArray = m_out.anchor(fastFixedArrayValue);
-            m_out.jump(continuation);
-
-            LBasicBlock lastNext = m_out.appendTo(slowAllocation, continuation);
-            ValueFromBlock slowFixedArray = m_out.anchor(vmCall(pointerType(), m_out.operation(operationCreateFixedArray), m_callFrame, m_out.constInt32(immutableButterfly->length())));
-            m_out.jump(continuation);
-
-            m_out.appendTo(continuation, lastNext);
-            LValue fixedArray = m_out.phi(pointerType(), fastFixedArray, slowFixedArray);
-            for (unsigned i = 0; i < immutableButterfly->length(); i++) {
-                // Because forwarded values are drained as JSValue, we should not generate value
-                // in Double form even if PhantomNewArrayBuffer's indexingType is ArrayWithDouble.
-                int64_t value = JSValue::encode(immutableButterfly->get(i));
-                m_out.store64(
-                    m_out.constInt64(value),
-                    m_out.baseIndex(m_heaps.JSFixedArray_buffer, fixedArray, m_out.constIntPtr(i), jsNumber(i)));
-            }
-            mutatorFence();
-            setJSValue(fixedArray);
+            setJSValue(frozenPointer(m_node->child1()->cellOperand()));
             return;
         }
 
@@ -5810,11 +5783,11 @@ private:
             m_out.jump(loopHeader);
 
             m_out.appendTo(slowAllocation, loopHeader);
-            ValueFromBlock slowArray = m_out.anchor(vmCall(pointerType(), m_out.operation(operationCreateFixedArray), m_callFrame, length));
+            ValueFromBlock slowArray = m_out.anchor(vmCall(Int64, m_out.operation(operationCreateFixedArray), m_callFrame, length));
             m_out.jump(loopHeader);
 
             m_out.appendTo(loopHeader, loopBody);
-            LValue fixedArray = m_out.phi(pointerType(), fastArray, slowArray);
+            LValue fixedArray = m_out.phi(Int64, fastArray, slowArray);
             ValueFromBlock startIndex = m_out.anchor(m_out.constIntPtr(0));
             m_out.branch(m_out.isZero32(length), unsure(continuation), unsure(loopBody));
 
@@ -5912,14 +5885,14 @@ private:
             }
 
             m_out.appendTo(slowPath, continuation);
-            ValueFromBlock slowResult = m_out.anchor(vmCall(pointerType(), m_out.operation(operationSpreadFastArray), m_callFrame, argument));
+            ValueFromBlock slowResult = m_out.anchor(vmCall(Int64, m_out.operation(operationSpreadFastArray), m_callFrame, argument));
             m_out.jump(continuation);
 
             m_out.appendTo(continuation, lastNext);
-            result = m_out.phi(pointerType(), fastResult, slowResult);
+            result = m_out.phi(Int64, fastResult, slowResult);
             mutatorFence();
         } else
-            result = vmCall(pointerType(), m_out.operation(operationSpreadGeneric), m_callFrame, argument);
+            result = vmCall(Int64, m_out.operation(operationSpreadGeneric), m_callFrame, argument);
 
         setJSValue(result);
     }

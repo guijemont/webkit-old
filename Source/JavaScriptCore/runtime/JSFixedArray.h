@@ -149,11 +149,6 @@ public:
 
     static void dumpToStream(const JSCell*, PrintStream&);
 
-    static Checked<size_t, RecordOverflow> allocationSize(Checked<size_t, RecordOverflow> numItems)
-    {
-        return offsetOfData() + numItems * sizeof(WriteBarrier<Unknown>);
-    }
-
 private:
     JSFixedArray(VM& vm, Structure* structure, unsigned size)
         : Base(vm, structure)
@@ -161,6 +156,11 @@ private:
     {
         for (unsigned i = 0; i < m_size; i++)
             buffer()[i].setStartingValue(JSValue());
+    }
+
+    static Checked<size_t, RecordOverflow> allocationSize(Checked<size_t, RecordOverflow> numItems)
+    {
+        return offsetOfData() + numItems * sizeof(WriteBarrier<Unknown>);
     }
 
     unsigned m_size;
