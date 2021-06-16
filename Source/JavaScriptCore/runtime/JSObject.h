@@ -865,12 +865,6 @@ public:
 
         return ensureArrayStorageSlow(vm);
     }
-
-    void ensureWritable(VM& vm)
-    {
-        if (isCopyOnWrite(indexingMode()))
-            convertFromCopyOnWrite(vm);
-    }
         
     static size_t offsetOfInlineStorage();
         
