@@ -73,7 +73,7 @@ inline void ConservativeRoots::genericAddPointer(void* p, HeapVersion markingVer
     HeapUtil::findGCObjectPointersForMarking(
         m_heap, markingVersion, newlyAllocatedVersion, filter, p,
         [&] (void* p, HeapCell::Kind cellKind) {
-            if (isJSCellKind(cellKind))
+            if (cellKind == HeapCell::JSCell)
                 markHook.markKnownJSCell(static_cast<JSCell*>(p));
             
             if (m_size == m_capacity)

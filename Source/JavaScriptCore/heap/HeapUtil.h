@@ -88,7 +88,7 @@ public:
             MarkedBlock* previousCandidate = MarkedBlock::blockFor(previousPointer);
             if (!filter.ruleOut(bitwise_cast<Bits>(previousCandidate))
                 && set.contains(previousCandidate)
-                && hasInteriorPointers(previousCandidate->handle().cellKind())) {
+                && previousCandidate->handle().cellKind() == HeapCell::Auxiliary) {
                 previousPointer = static_cast<char*>(previousCandidate->handle().cellAlign(previousPointer));
                 if (previousCandidate->handle().isLiveCell(markingVersion, newlyAllocatedVersion, isMarking, previousPointer))
                     func(previousPointer, previousCandidate->handle().cellKind());
@@ -110,11 +110,12 @@ public:
                 func(pointer, cellKind);
         };
     
-        if (isJSCellKind(cellKind)) {
-            if (MarkedBlock::isAtomAligned(pointer))
-                tryPointer(pointer);
-            if (!hasInteriorPointers(cellKind))
+        if (candidate->handle().cellKind() == HeapCell::JSCell) {
+            if (!MarkedBlock::isAtomAligned(pointer))
                 return;
+        
+            tryPointer(pointer);
+            return;
         }
     
         // A butterfly could point into the middle of an object.
@@ -143,14 +144,14 @@ public:
                 if (result) {
                     if (result > largeAllocations.begin()
                         && result[-1]->cell() == pointer
-                        && isJSCellKind(result[-1]->attributes().cellKind))
+                        && result[-1]->attributes().cellKind == HeapCell::JSCell)
                         return true;
                     if (result[0]->cell() == pointer
-                        && isJSCellKind(result[0]->attributes().cellKind))
+                        && result[0]->attributes().cellKind == HeapCell::JSCell)
                         return true;
                     if (result + 1 < largeAllocations.end()
                         && result[1]->cell() == pointer
-                        && isJSCellKind(result[1]->attributes().cellKind))
+                        && result[1]->attributes().cellKind == HeapCell::JSCell)
                         return true;
                 }
             }

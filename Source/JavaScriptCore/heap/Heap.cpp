@@ -721,7 +721,7 @@ struct GatherHeapSnapshotData : MarkedBlock::CountFunctor {
 
     IterationStatus operator()(HeapCell* heapCell, HeapCell::Kind kind) const
     {
-        if (isJSCellKind(kind)) {
+        if (kind == HeapCell::JSCell) {
             JSCell* cell = static_cast<JSCell*>(heapCell);
             cell->methodTable(m_vm)->heapSnapshot(cell, m_builder);
         }
@@ -749,7 +749,7 @@ struct RemoveDeadHeapSnapshotNodes : MarkedBlock::CountFunctor {
 
     IterationStatus operator()(HeapCell* cell, HeapCell::Kind kind) const
     {
-        if (isJSCellKind(kind))
+        if (kind == HeapCell::JSCell)
             m_snapshot.sweepCell(static_cast<JSCell*>(cell));
         return IterationStatus::Continue;
     }
@@ -838,7 +838,7 @@ size_t Heap::globalObjectCount()
     m_objectSpace.forEachLiveCell(
         iterationScope,
         [&] (HeapCell* heapCell, HeapCell::Kind kind) -> IterationStatus {
-            if (!isJSCellKind(kind))
+            if (kind != HeapCell::JSCell)
                 return IterationStatus::Continue;
             JSCell* cell = static_cast<JSCell*>(heapCell);
             if (cell->isObject() && asObject(cell)->isGlobalObject())
@@ -875,7 +875,7 @@ std::unique_ptr<TypeCountSet> Heap::objectTypeCounts()
     m_objectSpace.forEachLiveCell(
         iterationScope,
         [&] (HeapCell* cell, HeapCell::Kind kind) -> IterationStatus {
-            if (isJSCellKind(kind))
+            if (kind == HeapCell::JSCell)
                 recordType(*vm(), *result, static_cast<JSCell*>(cell));
             return IterationStatus::Continue;
         });
@@ -917,7 +917,7 @@ void Heap::deleteAllCodeBlocks(DeleteAllCodeEffort effort)
         // it uses a callee check, but then it will call into dead code.
         HeapIterationScope heapIterationScope(*this);
         vm.webAssemblyCodeBlockSpace.forEachLiveCell([&] (HeapCell* cell, HeapCell::Kind kind) {
-            ASSERT_UNUSED(kind, kind == HeapCell::JSCell);
+            ASSERT_UNUSED(kind, kind == HeapCell::Kind::JSCell);
             JSWebAssemblyCodeBlock* codeBlock = static_cast<JSWebAssemblyCodeBlock*>(cell);
             codeBlock->clearJSCallICs(vm);
         });

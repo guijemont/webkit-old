@@ -1246,7 +1246,7 @@ inline void ObjectsWithBrokenIndexingFinder::visit(JSCell* cell)
 
 IterationStatus ObjectsWithBrokenIndexingFinder::operator()(HeapCell* cell, HeapCell::Kind kind) const
 {
-    if (isJSCellKind(kind)) {
+    if (kind == HeapCell::JSCell) {
         // FIXME: This const_cast exists because this isn't a C++ lambda.
         // https://bugs.webkit.org/show_bug.cgi?id=159644
         const_cast<ObjectsWithBrokenIndexingFinder*>(this)->visit(static_cast<JSCell*>(cell));

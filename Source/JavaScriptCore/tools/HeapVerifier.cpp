@@ -188,7 +188,7 @@ bool HeapVerifier::validateCell(HeapCell* cell, VM* expectedVM)
         return false;
     }
 
-    if (!isJSCellKind(cell->cellKind()))
+    if (cell->cellKind() != HeapCell::JSCell)
         return true; // Nothing more to validate.
 
     JSCell* jsCell = static_cast<JSCell*>(cell);

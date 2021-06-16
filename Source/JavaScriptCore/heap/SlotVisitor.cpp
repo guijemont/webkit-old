@@ -196,15 +196,14 @@ void SlotVisitor::appendJSCellOrAuxiliary(HeapCell* heapCell)
     
     // In debug mode, we validate before marking since this makes it clearer what the problem
     // was. It's also slower, so we don't do it normally.
-    if (!ASSERT_DISABLED && isJSCellKind(heapCell->cellKind()))
+    if (!ASSERT_DISABLED && heapCell->cellKind() == HeapCell::JSCell)
         validateCell(static_cast<JSCell*>(heapCell));
     
     if (Heap::testAndSetMarked(m_markingVersion, heapCell))
         return;
     
     switch (heapCell->cellKind()) {
-    case HeapCell::JSCell:
-    case HeapCell::JSCellWithInteriorPointers: {
+    case HeapCell::JSCell: {
         // We have ample budget to perform validation here.
     
         JSCell* jsCell = static_cast<JSCell*>(heapCell);

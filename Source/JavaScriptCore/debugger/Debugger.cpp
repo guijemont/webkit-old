@@ -51,7 +51,7 @@ struct GatherSourceProviders : public MarkedBlock::VoidFunctor {
 
     IterationStatus operator()(HeapCell* heapCell, HeapCell::Kind kind) const
     {
-        if (!isJSCellKind(kind))
+        if (kind != HeapCell::JSCell)
             return IterationStatus::Continue;
         
         JSCell* cell = static_cast<JSCell*>(heapCell);
