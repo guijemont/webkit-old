@@ -1500,18 +1500,6 @@ static EncodedJSValue JSC_HOST_CALL functionDumpCell(ExecState* exec)
     return encodedJSUndefined();
 }
 
-// Gets the dataLog dump of the indexingMode of the passed value.
-// Usage: $vm.print("indexingMode = " + $vm.indexingMode(jsValue))
-static EncodedJSValue JSC_HOST_CALL functionIndexingMode(ExecState* exec)
-{
-    if (!exec->argument(0).isObject())
-        return encodedJSUndefined();
-
-    WTF::StringPrintStream stream;
-    stream.print(IndexingTypeDump(exec->uncheckedArgument(0).getObject()->indexingMode()));
-    return JSValue::encode(jsString(exec, stream.toString()));
-}
-
 static EncodedJSValue JSC_HOST_CALL functionInlineCapacity(ExecState* exec)
 {
     VM& vm = exec->vm();
@@ -2021,7 +2009,6 @@ void JSDollarVM::finishCreation(VM& vm)
 
     addFunction(vm, "dumpCell", functionDumpCell, 1);
 
-    addFunction(vm, "indexingMode", functionIndexingMode, 1);
     addFunction(vm, "inlineCapacity", functionInlineCapacity, 1);
     addFunction(vm, "value", functionValue, 1);
     addFunction(vm, "getpid", functionGetPID, 0);
