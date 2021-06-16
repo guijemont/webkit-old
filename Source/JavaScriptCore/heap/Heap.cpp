@@ -2046,8 +2046,6 @@ void Heap::finalize()
     
     if (HasOwnPropertyCache* cache = vm()->hasOwnPropertyCache())
         cache->clear();
-
-    immutableButterflyToStringCache.clear();
     
     for (const HeapFinalizerCallback& callback : m_heapFinalizerCallbacks)
         callback.run(*vm());
