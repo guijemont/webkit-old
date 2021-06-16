@@ -852,7 +852,7 @@ bool JSObject::putByIndex(JSCell* cell, ExecState* exec, unsigned propertyName, 
     }
         
     case ALL_INT32_INDEXING_TYPES: {
-        if (!value.isInt32()) {
+        if (!value.isInt32() || isCopyOnWrite(thisObject->indexingMode())) {
             thisObject->convertInt32ForValue(vm, value);
             return putByIndex(cell, exec, propertyName, value, shouldThrow);
         }
@@ -1517,10 +1517,9 @@ ContiguousJSValues JSObject::ensureWritableInt32Slow(VM& vm)
 {
     ASSERT(inherits(vm, info()));
 
-    if (isCopyOnWrite(indexingMode())) {
+    if (isCopyOnWrite(indexingMode()) && hasInt32(indexingMode())) {
         convertFromCopyOnWrite(vm);
-        if (hasInt32(indexingMode()))
-            return butterfly()->contiguousInt32();
+        return butterfly()->contiguousInt32();
     }
 
     if (structure(vm)->hijacksIndexingHeader())
