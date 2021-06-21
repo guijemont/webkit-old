@@ -109,7 +109,7 @@ struct NewArrayBufferData {
     union {
         struct {
             unsigned vectorLengthHint;
-            unsigned indexingMode;
+            unsigned indexingType;
         };
         uint64_t asQuadWord;
     };
@@ -1211,15 +1211,7 @@ public:
     {
         ASSERT(hasIndexingType());
         if (op() == NewArrayBuffer || op() == PhantomNewArrayBuffer)
-            return static_cast<IndexingType>(newArrayBufferData().indexingMode) & IndexingTypeMask;
-        return static_cast<IndexingType>(m_opInfo.as<uint32_t>());
-    }
-
-    IndexingType indexingMode()
-    {
-        ASSERT(hasIndexingType());
-        if (op() == NewArrayBuffer || op() == PhantomNewArrayBuffer)
-            return static_cast<IndexingType>(newArrayBufferData().indexingMode);
+            return static_cast<IndexingType>(newArrayBufferData().indexingType);
         return static_cast<IndexingType>(m_opInfo.as<uint32_t>());
     }
     

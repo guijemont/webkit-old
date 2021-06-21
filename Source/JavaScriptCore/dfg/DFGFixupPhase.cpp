@@ -642,7 +642,7 @@ private:
         case StringCharAt:
         case StringCharCodeAt: {
             // Currently we have no good way of refining these.
-            ASSERT(node->arrayMode() == ArrayMode(Array::String, Array::Read));
+            ASSERT(node->arrayMode() == ArrayMode(Array::String));
             blessArrayOperation(node->child1(), node->child2(), node->child3());
             fixEdge<KnownCellUse>(node->child1());
             fixEdge<Int32Use>(node->child2());
@@ -913,7 +913,7 @@ private:
             }
             
             if (badNews) {
-                node->setArrayMode(ArrayMode(Array::Generic, node->arrayMode().action()));
+                node->setArrayMode(ArrayMode(Array::Generic));
                 break;
             }
             
@@ -2293,13 +2293,13 @@ private:
     template<UseKind useKind>
     void attemptToForceStringArrayModeByToStringConversion(ArrayMode& arrayMode, Node* node)
     {
-        ASSERT(arrayMode == ArrayMode(Array::Generic, Array::Read));
+        ASSERT(arrayMode == ArrayMode(Array::Generic));
         
         if (!m_graph.canOptimizeStringObjectAccess(node->origin.semantic))
             return;
         
         createToString<useKind>(node, node->child1());
-        arrayMode = ArrayMode(Array::String, Array::Read);
+        arrayMode = ArrayMode(Array::String);
     }
     
     template<UseKind useKind>
@@ -3260,7 +3260,7 @@ private:
         CodeBlock* profiledBlock = m_graph.baselineCodeBlockFor(node->origin.semantic);
         ArrayProfile* arrayProfile = 
             profiledBlock->getArrayProfile(node->origin.semantic.bytecodeIndex);
-        ArrayMode arrayMode = ArrayMode(Array::SelectUsingPredictions, Array::Read);
+        ArrayMode arrayMode = ArrayMode(Array::SelectUsingPredictions);
         if (arrayProfile) {
             ConcurrentJSLocker locker(profiledBlock->m_lock);
             arrayProfile->computeUpdatedPrediction(locker, profiledBlock);
@@ -3273,7 +3273,7 @@ private:
                 // GetById. I.e. ForceExit = Generic. So, there is no harm - and only
                 // profit - from treating the Unprofiled case as
                 // SelectUsingPredictions.
-                arrayMode = ArrayMode(Array::SelectUsingPredictions, Array::Read);
+                arrayMode = ArrayMode(Array::SelectUsingPredictions);
             }
         }
             

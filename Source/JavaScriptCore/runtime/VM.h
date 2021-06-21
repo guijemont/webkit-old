@@ -529,7 +529,6 @@ public:
     Strong<Structure> symbolStructure;
     Strong<Structure> symbolTableStructure;
     Strong<Structure> fixedArrayStructure;
-    Strong<Structure> immutableButterflyStructures[NumberOfCopyOnWriteIndexingModes];
     Strong<Structure> sourceCodeStructure;
     Strong<Structure> scriptFetcherStructure;
     Strong<Structure> scriptFetchParametersStructure;

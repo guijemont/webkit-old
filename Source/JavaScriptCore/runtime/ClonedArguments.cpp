@@ -61,7 +61,7 @@ ClonedArguments* ClonedArguments::createEmpty(
             return 0;
 
         for (unsigned i = length; i < vectorLength; ++i)
-            butterfly->contiguous().atUnsafe(i).clear();
+            butterfly->contiguous().at(i).clear();
     }
     
     ClonedArguments* result =

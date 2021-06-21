@@ -324,7 +324,7 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
     if (node->hasLazyJSValue())
         out.print(comma, node->lazyJSValue());
     if (node->hasIndexingType())
-        out.print(comma, IndexingTypeDump(node->indexingMode()));
+        out.print(comma, IndexingTypeDump(node->indexingType()));
     if (node->hasTypedArrayType())
         out.print(comma, node->typedArrayType());
     if (node->hasPhi())

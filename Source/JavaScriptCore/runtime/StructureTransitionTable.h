@@ -83,23 +83,23 @@ inline IndexingType newIndexingType(IndexingType oldType, NonPropertyTransition 
         ASSERT(!hasIndexedProperties(oldType));
         return oldType | UndecidedShape;
     case NonPropertyTransition::AllocateInt32:
-        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || oldType == CopyOnWriteArrayWithInt32);
-        return (oldType & ~IndexingShapeAndWritabilityMask) | Int32Shape;
+        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType));
+        return (oldType & ~IndexingShapeMask) | Int32Shape;
     case NonPropertyTransition::AllocateDouble:
-        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || oldType == CopyOnWriteArrayWithDouble);
-        return (oldType & ~IndexingShapeAndWritabilityMask) | DoubleShape;
+        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType));
+        return (oldType & ~IndexingShapeMask) | DoubleShape;
     case NonPropertyTransition::AllocateContiguous:
-        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || hasDouble(oldType) || oldType == CopyOnWriteArrayWithContiguous);
-        return (oldType & ~IndexingShapeAndWritabilityMask) | ContiguousShape;
+        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || hasDouble(oldType));
+        return (oldType & ~IndexingShapeMask) | ContiguousShape;
     case NonPropertyTransition::AllocateArrayStorage:
         ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || hasDouble(oldType) || hasContiguous(oldType));
-        return (oldType & ~IndexingShapeAndWritabilityMask) | ArrayStorageShape;
+        return (oldType & ~IndexingShapeMask) | ArrayStorageShape;
     case NonPropertyTransition::AllocateSlowPutArrayStorage:
-        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || hasDouble(oldType) || hasContiguous(oldType));
-        return (oldType & ~IndexingShapeAndWritabilityMask) | SlowPutArrayStorageShape;
+        ASSERT(!hasIndexedProperties(oldType) || hasUndecided(oldType) || hasInt32(oldType) || hasDouble(oldType) || hasContiguous(oldType) || hasContiguous(oldType));
+        return (oldType & ~IndexingShapeMask) | SlowPutArrayStorageShape;
     case NonPropertyTransition::SwitchToSlowPutArrayStorage:
         ASSERT(hasArrayStorage(oldType));
-        return (oldType & ~IndexingShapeAndWritabilityMask) | SlowPutArrayStorageShape;
+        return (oldType & ~IndexingShapeMask) | SlowPutArrayStorageShape;
     case NonPropertyTransition::AddIndexedAccessors:
         return oldType | MayHaveIndexedAccessors;
     default:

@@ -53,7 +53,6 @@
 #include "JSFixedArray.h"
 #include "JSGenericTypedArrayViewConstructorInlines.h"
 #include "JSGlobalObjectFunctions.h"
-#include "JSImmutableButterfly.h"
 #include "JSLexicalEnvironment.h"
 #include "JSMap.h"
 #include "JSPropertyNameEnumerator.h"
@@ -971,7 +970,7 @@ void JIT_OPERATION operationPutByValDirectBeyondArrayBoundsNonStrict(ExecState* 
 {
     VM& vm = exec->vm();
     NativeCallFrameTracer tracer(&vm, exec);
-
+    
     if (index >= 0) {
         object->putDirectIndex(exec, index, JSValue::decode(encodedValue));
         return;
@@ -1033,7 +1032,7 @@ EncodedJSValue JIT_OPERATION operationArrayPushDoubleMultiple(ExecState* exec, J
     // If it can cause any JS interactions, we can call the caller JS function of this function and overwrite the
     // content of ScratchBuffer. If the IndexingType is now ArrayWithDouble, we can ensure
     // that there is no indexed accessors in this object and its prototype chain.
-    ASSERT(array->indexingMode() == ArrayWithDouble);
+    ASSERT(array->indexingType() == ArrayWithDouble);
 
     double* values = static_cast<double*>(buffer);
     for (int32_t i = 0; i < elementCount; ++i) {
@@ -1537,17 +1536,11 @@ char* JIT_OPERATION operationNewArrayWithSizeAndHint(ExecState* exec, Structure*
     return bitwise_cast<char*>(result);
 }
 
-JSCell* JIT_OPERATION operationNewArrayBuffer(ExecState* exec, Structure* arrayStructure, JSCell* immutableButterflyCell)
+JSCell* JIT_OPERATION operationNewArrayBuffer(ExecState* exec, Structure* arrayStructure, JSCell* fixedArray, size_t size)
 {
     VM& vm = exec->vm();
     NativeCallFrameTracer tracer(&vm, exec);
-    ASSERT(!arrayStructure->outOfLineCapacity());
-    auto* immutableButterfly = jsCast<JSImmutableButterfly*>(immutableButterflyCell);
-    ASSERT(arrayStructure->indexingMode() == immutableButterfly->indexingMode() || hasAnyArrayStorage(arrayStructure->indexingMode()));
-    auto* result = CommonSlowPaths::allocateNewArrayBuffer(vm, arrayStructure, immutableButterfly);
-    ASSERT(result->indexingMode() == result->structure(vm)->indexingMode());
-    ASSERT(result->structure(vm) == arrayStructure);
-    return result;
+    return constructArray(exec, arrayStructure, jsCast<JSFixedArray*>(fixedArray)->values(), size);
 }
 
 char* JIT_OPERATION operationNewInt8ArrayWithSize(
@@ -1887,10 +1880,8 @@ char* JIT_OPERATION operationEnsureInt32(ExecState* exec, JSCell* cell)
     
     if (!cell->isObject())
         return 0;
-
-    auto* result = reinterpret_cast<char*>(asObject(cell)->ensureWritableInt32(vm).data());
-    ASSERT((!isCopyOnWrite(asObject(cell)->indexingMode()) && hasInt32(cell->indexingMode())) || !result);
-    return result;
+    
+    return reinterpret_cast<char*>(asObject(cell)->ensureInt32(vm).data());
 }
 
 char* JIT_OPERATION operationEnsureDouble(ExecState* exec, JSCell* cell)
@@ -1900,10 +1891,8 @@ char* JIT_OPERATION operationEnsureDouble(ExecState* exec, JSCell* cell)
     
     if (!cell->isObject())
         return 0;
-
-    auto* result = reinterpret_cast<char*>(asObject(cell)->ensureWritableDouble(vm).data());
-    ASSERT((!isCopyOnWrite(asObject(cell)->indexingMode()) && hasDouble(cell->indexingMode())) || !result);
-    return result;
+    
+    return reinterpret_cast<char*>(asObject(cell)->ensureDouble(vm).data());
 }
 
 char* JIT_OPERATION operationEnsureContiguous(ExecState* exec, JSCell* cell)
@@ -1914,9 +1903,7 @@ char* JIT_OPERATION operationEnsureContiguous(ExecState* exec, JSCell* cell)
     if (!cell->isObject())
         return 0;
     
-    auto* result = reinterpret_cast<char*>(asObject(cell)->ensureWritableContiguous(vm).data());
-    ASSERT((!isCopyOnWrite(asObject(cell)->indexingMode()) && hasContiguous(cell->indexingMode())) || !result);
-    return result;
+    return reinterpret_cast<char*>(asObject(cell)->ensureContiguous(vm).data());
 }
 
 char* JIT_OPERATION operationEnsureArrayStorage(ExecState* exec, JSCell* cell)
@@ -1927,9 +1914,7 @@ char* JIT_OPERATION operationEnsureArrayStorage(ExecState* exec, JSCell* cell)
     if (!cell->isObject())
         return 0;
 
-    auto* result = reinterpret_cast<char*>(asObject(cell)->ensureArrayStorage(vm));
-    ASSERT((!isCopyOnWrite(asObject(cell)->indexingMode()) && hasAnyArrayStorage(cell->indexingMode())) || !result);
-    return result;
+    return reinterpret_cast<char*>(asObject(cell)->ensureArrayStorage(vm));
 }
 
 EncodedJSValue JIT_OPERATION operationHasGenericProperty(ExecState* exec, EncodedJSValue encodedBaseValue, JSCell* propertyName)

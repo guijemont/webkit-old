@@ -128,7 +128,6 @@ public:
     
     JSType type() const;
     IndexingType indexingTypeAndMisc() const;
-    IndexingType indexingMode() const;
     IndexingType indexingType() const;
     StructureID structureID() const { return m_structureID; }
     Structure* structure() const;

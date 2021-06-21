@@ -37,7 +37,6 @@
 #include "DOMJITSignature.h"
 #include "InlineCallFrame.h"
 #include "JSFixedArray.h"
-#include "JSImmutableButterfly.h"
 
 namespace JSC { namespace DFG {
 
@@ -1436,7 +1435,7 @@ void clobberize(Graph& graph, Node* node, const ReadFunctor& read, const WriteFu
         read(HeapObjectCount);
         write(HeapObjectCount);
 
-        auto* array = node->castOperand<JSImmutableButterfly*>();
+        JSFixedArray* array = node->castOperand<JSFixedArray*>();
         unsigned numElements = array->length();
         def(HeapLocation(ArrayLengthLoc, Butterfly_publicLength, node),
             LazyNode(graph.freeze(jsNumber(numElements))));

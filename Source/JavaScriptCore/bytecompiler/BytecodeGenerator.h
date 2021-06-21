@@ -54,7 +54,6 @@
 
 namespace JSC {
 
-    class JSImmutableButterfly;
     class Identifier;
 
     enum ExpectedFunction {
@@ -667,11 +666,10 @@ namespace JSC {
         void emitTDZCheckIfNecessary(const Variable&, RegisterID* target, RegisterID* scope);
         void liftTDZCheckIfPossible(const Variable&);
         RegisterID* emitNewObject(RegisterID* dst);
-        RegisterID* emitNewArray(RegisterID* dst, ElementNode*, unsigned length, IndexingType recommendedIndexingType); // stops at first elision
-        RegisterID* emitNewArrayBuffer(RegisterID* dst, JSImmutableButterfly*, IndexingType recommendedIndexingType);
-        // FIXME: new_array_with_spread should use an array allocation profile and take a recommendedIndexingType
+        RegisterID* emitNewArray(RegisterID* dst, ElementNode*, unsigned length); // stops at first elision
         RegisterID* emitNewArrayWithSpread(RegisterID* dst, ElementNode*);
         RegisterID* emitNewArrayWithSize(RegisterID* dst, RegisterID* length);
+        RegisterID* emitNewArrayBuffer(RegisterID* dst, JSFixedArray*);
 
         RegisterID* emitNewFunction(RegisterID* dst, FunctionMetadataNode*);
         RegisterID* emitNewFunctionExpression(RegisterID* dst, FuncExprNode*);
@@ -1009,7 +1007,7 @@ namespace JSC {
         Variable variableForLocalEntry(const Identifier&, const SymbolTableEntry&, int symbolTableConstantIndex, bool isLexicallyScoped);
 
         void emitOpcode(OpcodeID);
-        UnlinkedArrayAllocationProfile newArrayAllocationProfile(IndexingType);
+        UnlinkedArrayAllocationProfile newArrayAllocationProfile();
         UnlinkedObjectAllocationProfile newObjectAllocationProfile();
         UnlinkedValueProfile emitProfiledOpcode(OpcodeID);
         int kill(RegisterID* dst)

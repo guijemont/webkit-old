@@ -72,10 +72,10 @@ JSArray* JSArray::tryCreateUninitializedRestricted(ObjectInitializationScope& sc
         butterfly->setPublicLength(initialLength);
         if (hasDouble(indexingType)) {
             for (unsigned i = initialLength; i < vectorLength; ++i)
-                butterfly->contiguousDouble().atUnsafe(i) = PNaN;
+                butterfly->contiguousDouble().at(i) = PNaN;
         } else {
             for (unsigned i = initialLength; i < vectorLength; ++i)
-                butterfly->contiguous().atUnsafe(i).clear();
+                butterfly->contiguous().at(i).clear();
         }
     } else {
         ASSERT(
@@ -286,9 +286,6 @@ bool JSArray::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSVa
         scope.release();
         return ordinarySetSlow(exec, thisObject, propertyName, value, slot.thisValue(), slot.isStrictMode());
     }
-
-    if (isCopyOnWrite(thisObject->indexingMode()))
-        thisObject->convertFromCopyOnWrite(vm);
 
     if (propertyName == vm.propertyNames->length) {
         if (!thisObject->isLengthWritable())
@@ -563,10 +560,10 @@ bool JSArray::appendMemcpy(ExecState* exec, VM& vm, unsigned startIndex, JSC::JS
         auto* butterfly = this->butterfly();
         if (type == ArrayWithDouble) {
             for (unsigned i = startIndex; i < newLength; ++i)
-                butterfly->contiguousDouble().at(this, i) = PNaN;
+                butterfly->contiguousDouble().at(i) = PNaN;
         } else {
             for (unsigned i = startIndex; i < newLength; ++i)
-                butterfly->contiguousInt32().at(this, i).setWithoutWriteBarrier(JSValue());
+                butterfly->contiguousInt32().at(i).setWithoutWriteBarrier(JSValue());
         }
     } else if (type == ArrayWithDouble)
         memcpy(butterfly()->contiguousDouble().data() + startIndex, otherArray->butterfly()->contiguousDouble().data(), sizeof(JSValue) * otherLength);
@@ -596,7 +593,7 @@ bool JSArray::setLength(ExecState* exec, unsigned newLength, bool throwException
         }
         createInitialUndecided(vm, newLength);
         return true;
-
+        
     case ArrayWithUndecided:
     case ArrayWithInt32:
     case ArrayWithDouble:
@@ -628,10 +625,10 @@ bool JSArray::setLength(ExecState* exec, unsigned newLength, bool throwException
 
         if (indexingType() == ArrayWithDouble) {
             for (unsigned i = butterfly->publicLength(); i-- > newLength;)
-                butterfly->contiguousDouble().at(this, i) = PNaN;
+                butterfly->contiguousDouble().at(i) = PNaN;
         } else {
             for (unsigned i = butterfly->publicLength(); i-- > newLength;)
-                butterfly->contiguous().at(this, i).clear();
+                butterfly->contiguous().at(i).clear();
         }
         butterfly->setPublicLength(newLength);
         return true;
@@ -653,11 +650,8 @@ JSValue JSArray::pop(ExecState* exec)
     VM& vm = exec->vm();
     auto scope = DECLARE_THROW_SCOPE(vm);
 
-    if (isCopyOnWrite(indexingMode()))
-        convertFromCopyOnWrite(vm);
-
     Butterfly* butterfly = this->butterfly();
-
+    
     switch (indexingType()) {
     case ArrayClass:
         return jsUndefined();
@@ -676,9 +670,9 @@ JSValue JSArray::pop(ExecState* exec)
             return jsUndefined();
         
         RELEASE_ASSERT(length < butterfly->vectorLength());
-        JSValue value = butterfly->contiguous().at(this, length).get();
+        JSValue value = butterfly->contiguous().at(length).get();
         if (value) {
-            butterfly->contiguous().at(this, length).clear();
+            butterfly->contiguous().at(length).clear();
             butterfly->setPublicLength(length);
             return value;
         }
@@ -692,9 +686,9 @@ JSValue JSArray::pop(ExecState* exec)
             return jsUndefined();
         
         RELEASE_ASSERT(length < butterfly->vectorLength());
-        double value = butterfly->contiguousDouble().at(this, length);
+        double value = butterfly->contiguousDouble().at(length);
         if (value == value) {
-            butterfly->contiguousDouble().at(this, length) = PNaN;
+            butterfly->contiguousDouble().at(length) = PNaN;
             butterfly->setPublicLength(length);
             return JSValue(JSValue::EncodeAsDouble, value);
         }
@@ -760,18 +754,12 @@ NEVER_INLINE void JSArray::push(ExecState* exec, JSValue value)
 
 JSArray* JSArray::fastSlice(ExecState& exec, unsigned startIndex, unsigned count)
 {
-    VM& vm = exec.vm();
-    auto arrayType = indexingMode();
+    auto arrayType = indexingType();
     switch (arrayType) {
-    case CopyOnWriteArrayWithInt32:
-    case CopyOnWriteArrayWithDouble:
-    case CopyOnWriteArrayWithContiguous:
-        convertFromCopyOnWrite(vm);
-        arrayType = indexingMode();
-        FALLTHROUGH;
     case ArrayWithDouble:
     case ArrayWithInt32:
     case ArrayWithContiguous: {
+        VM& vm = exec.vm();
         if (count >= MIN_SPARSE_ARRAY_INDEX || structure(vm)->holesMustForwardToPrototype(vm, this))
             return nullptr;
 
@@ -913,9 +901,6 @@ bool JSArray::shiftCountWithAnyIndexingType(ExecState* exec, unsigned& startInde
     VM& vm = exec->vm();
     RELEASE_ASSERT(count > 0);
 
-    if (isCopyOnWrite(indexingMode()))
-        convertFromCopyOnWrite(vm);
-
     Butterfly* butterfly = this->butterfly();
     
     switch (indexingType()) {
@@ -943,12 +928,12 @@ bool JSArray::shiftCountWithAnyIndexingType(ExecState* exec, unsigned& startInde
         unsigned end = oldLength - count;
         if (this->structure(vm)->holesMustForwardToPrototype(vm, this)) {
             for (unsigned i = startIndex; i < end; ++i) {
-                JSValue v = butterfly->contiguous().at(this, i + count).get();
+                JSValue v = butterfly->contiguous().at(i + count).get();
                 if (UNLIKELY(!v)) {
                     startIndex = i;
                     return shiftCountWithArrayStorage(vm, startIndex, count, ensureArrayStorage(vm));
                 }
-                butterfly->contiguous().at(this, i).setWithoutWriteBarrier(v);
+                butterfly->contiguous().at(i).setWithoutWriteBarrier(v);
             }
         } else {
             memmove(butterfly->contiguous().data() + startIndex, 
@@ -957,7 +942,7 @@ bool JSArray::shiftCountWithAnyIndexingType(ExecState* exec, unsigned& startInde
         }
 
         for (unsigned i = end; i < oldLength; ++i)
-            butterfly->contiguous().at(this, i).clear();
+            butterfly->contiguous().at(i).clear();
         
         butterfly->setPublicLength(oldLength - count);
 
@@ -984,12 +969,12 @@ bool JSArray::shiftCountWithAnyIndexingType(ExecState* exec, unsigned& startInde
         unsigned end = oldLength - count;
         if (this->structure(vm)->holesMustForwardToPrototype(vm, this)) {
             for (unsigned i = startIndex; i < end; ++i) {
-                double v = butterfly->contiguousDouble().at(this, i + count);
+                double v = butterfly->contiguousDouble().at(i + count);
                 if (UNLIKELY(v != v)) {
                     startIndex = i;
                     return shiftCountWithArrayStorage(vm, startIndex, count, ensureArrayStorage(vm));
                 }
-                butterfly->contiguousDouble().at(this, i) = v;
+                butterfly->contiguousDouble().at(i) = v;
             }
         } else {
             memmove(butterfly->contiguousDouble().data() + startIndex,
@@ -997,7 +982,7 @@ bool JSArray::shiftCountWithAnyIndexingType(ExecState* exec, unsigned& startInde
                 sizeof(JSValue) * (end - startIndex));
         }
         for (unsigned i = end; i < oldLength; ++i)
-            butterfly->contiguousDouble().at(this, i) = PNaN;
+            butterfly->contiguousDouble().at(i) = PNaN;
         
         butterfly->setPublicLength(oldLength - count);
         return true;
@@ -1072,9 +1057,6 @@ bool JSArray::unshiftCountWithAnyIndexingType(ExecState* exec, unsigned startInd
     VM& vm = exec->vm();
     auto scope = DECLARE_THROW_SCOPE(vm);
 
-    if (isCopyOnWrite(indexingMode()))
-        convertFromCopyOnWrite(vm);
-
     Butterfly* butterfly = this->butterfly();
     
     switch (indexingType()) {
@@ -1112,7 +1094,7 @@ bool JSArray::unshiftCountWithAnyIndexingType(ExecState* exec, unsigned startInd
         // We have to check for holes before we start moving things around so that we don't get halfway 
         // through shifting and then realize we should have been in ArrayStorage mode.
         for (unsigned i = oldLength; i-- > startIndex;) {
-            JSValue v = butterfly->contiguous().at(this, i).get();
+            JSValue v = butterfly->contiguous().at(i).get();
             if (UNLIKELY(!v)) {
                 scope.release();
                 return unshiftCountWithArrayStorage(exec, startIndex, count, ensureArrayStorage(vm));
@@ -1120,9 +1102,9 @@ bool JSArray::unshiftCountWithAnyIndexingType(ExecState* exec, unsigned startInd
         }
 
         for (unsigned i = oldLength; i-- > startIndex;) {
-            JSValue v = butterfly->contiguous().at(this, i).get();
+            JSValue v = butterfly->contiguous().at(i).get();
             ASSERT(v);
-            butterfly->contiguous().at(this, i + count).setWithoutWriteBarrier(v);
+            butterfly->contiguous().at(i + count).setWithoutWriteBarrier(v);
         }
         
         // Our memmoving of values around in the array could have concealed some of them from
@@ -1165,7 +1147,7 @@ bool JSArray::unshiftCountWithAnyIndexingType(ExecState* exec, unsigned startInd
         // We have to check for holes before we start moving things around so that we don't get halfway 
         // through shifting and then realize we should have been in ArrayStorage mode.
         for (unsigned i = oldLength; i-- > startIndex;) {
-            double v = butterfly->contiguousDouble().at(this, i);
+            double v = butterfly->contiguousDouble().at(i);
             if (UNLIKELY(v != v)) {
                 scope.release();
                 return unshiftCountWithArrayStorage(exec, startIndex, count, ensureArrayStorage(vm));
@@ -1173,9 +1155,9 @@ bool JSArray::unshiftCountWithAnyIndexingType(ExecState* exec, unsigned startInd
         }
 
         for (unsigned i = oldLength; i-- > startIndex;) {
-            double v = butterfly->contiguousDouble().at(this, i);
+            double v = butterfly->contiguousDouble().at(i);
             ASSERT(v == v);
-            butterfly->contiguousDouble().at(this, i + count) = v;
+            butterfly->contiguousDouble().at(i + count) = v;
         }
         
         // NOTE: we're leaving being garbage in the part of the array that we shifted out
@@ -1226,7 +1208,7 @@ void JSArray::fillArgList(ExecState* exec, MarkedArgumentBuffer& args)
         vector = 0;
         vectorEnd = 0;
         for (; i < butterfly->publicLength(); ++i) {
-            double v = butterfly->contiguousDouble().at(this, i);
+            double v = butterfly->contiguousDouble().at(i);
             if (v != v)
                 break;
             args.append(JSValue(JSValue::EncodeAsDouble, v));
@@ -1299,7 +1281,7 @@ void JSArray::copyToArguments(ExecState* exec, VirtualRegister firstElementDest,
         vectorEnd = 0;
         for (; i < butterfly->publicLength(); ++i) {
             ASSERT(i < butterfly->vectorLength());
-            double v = butterfly->contiguousDouble().at(this, i);
+            double v = butterfly->contiguousDouble().at(i);
             if (v != v)
                 break;
             exec->r(firstElementDest + i - offset) = JSValue(JSValue::EncodeAsDouble, v);

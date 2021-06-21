@@ -49,7 +49,7 @@ ALWAYS_INLINE JSArray* tryCreateUninitializedRegExpMatchesArray(ObjectInitializa
     butterfly->setPublicLength(initialLength);
 
     for (unsigned i = initialLength; i < vectorLength; ++i)
-        butterfly->contiguous().atUnsafe(i).clear();
+        butterfly->contiguous().at(i).clear();
 
     JSArray* result = JSArray::createWithButterfly(vm, deferralContext, structure, butterfly);
 

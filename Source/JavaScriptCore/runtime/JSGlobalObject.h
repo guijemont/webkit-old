@@ -322,10 +322,10 @@ public:
     WriteBarrier<Structure> m_objectStructureForObjectConstructor;
         
     // Lists the actual structures used for having these particular indexing shapes.
-    WriteBarrier<Structure> m_originalArrayStructureForIndexingShape[NumberOfArrayIndexingModes];
+    WriteBarrier<Structure> m_originalArrayStructureForIndexingShape[NumberOfIndexingShapes];
     // Lists the structures we should use during allocation for these particular indexing shapes.
     // These structures will differ from the originals list above when we are having a bad time.
-    WriteBarrier<Structure> m_arrayStructureForIndexingShapeDuringAllocation[NumberOfArrayIndexingModes];
+    WriteBarrier<Structure> m_arrayStructureForIndexingShapeDuringAllocation[NumberOfIndexingShapes];
 
     LazyProperty<JSGlobalObject, Structure> m_callbackConstructorStructure;
     LazyProperty<JSGlobalObject, Structure> m_callbackFunctionStructure;
@@ -627,12 +627,12 @@ public:
     Structure* originalArrayStructureForIndexingType(IndexingType indexingType) const
     {
         ASSERT(indexingType & IsArray);
-        return m_originalArrayStructureForIndexingShape[arrayIndexFromIndexingType(indexingType)].get();
+        return m_originalArrayStructureForIndexingShape[(indexingType & IndexingShapeMask) >> IndexingShapeShift].get();
     }
     Structure* arrayStructureForIndexingTypeDuringAllocation(IndexingType indexingType) const
     {
         ASSERT(indexingType & IsArray);
-        return m_arrayStructureForIndexingShapeDuringAllocation[arrayIndexFromIndexingType(indexingType)].get();
+        return m_arrayStructureForIndexingShapeDuringAllocation[(indexingType & IndexingShapeMask) >> IndexingShapeShift].get();
     }
     Structure* arrayStructureForIndexingTypeDuringAllocation(ExecState* exec, IndexingType indexingType, JSValue newTarget) const
     {
@@ -645,7 +645,7 @@ public:
         
     bool isOriginalArrayStructure(Structure* structure)
     {
-        return originalArrayStructureForIndexingType(structure->indexingMode() | IsArray) == structure;
+        return originalArrayStructureForIndexingType(structure->indexingType() | IsArray) == structure;
     }
         
     Structure* booleanObjectStructure() const { return m_booleanObjectStructure.get(); }

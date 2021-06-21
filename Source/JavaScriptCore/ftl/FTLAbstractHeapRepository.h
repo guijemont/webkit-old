@@ -114,7 +114,7 @@ namespace JSC { namespace FTL {
     macro(StringImpl_length, StringImpl::lengthMemoryOffset()) \
     macro(Structure_classInfo, Structure::classInfoOffset()) \
     macro(Structure_globalObject, Structure::globalObjectOffset()) \
-    macro(Structure_indexingModeIncludingHistory, Structure::indexingModeIncludingHistoryOffset()) \
+    macro(Structure_indexingTypeIncludingHistory, Structure::indexingTypeIncludingHistoryOffset()) \
     macro(Structure_inlineCapacity, Structure::inlineCapacityOffset()) \
     macro(Structure_prototype, Structure::prototypeOffset()) \
     macro(Structure_structureID, Structure::structureIDOffset()) \

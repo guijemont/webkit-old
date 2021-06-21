@@ -148,7 +148,7 @@ private:
                 }
 
                 case NewArrayBuffer: {
-                    if (m_graph.isWatchingHavingABadTimeWatchpoint(node) && !hasAnyArrayStorage(node->indexingMode()))
+                    if (m_graph.isWatchingHavingABadTimeWatchpoint(node) && !hasAnyArrayStorage(node->indexingType()))
                         m_candidates.add(node);
                     break;
                 }
@@ -435,9 +435,9 @@ private:
                         break;
                     case NewArrayBuffer: {
                         ASSERT(m_graph.isWatchingHavingABadTimeWatchpoint(target));
-                        IndexingType indexingMode = target->indexingMode();
-                        ASSERT(!hasAnyArrayStorage(indexingMode));
-                        structure = globalObject->originalArrayStructureForIndexingType(indexingMode);
+                        IndexingType indexingType = target->indexingType();
+                        ASSERT(!hasAnyArrayStorage(indexingType));
+                        structure = globalObject->originalArrayStructureForIndexingType(indexingType);
                         break;
                     }
                     default:
@@ -873,7 +873,7 @@ private:
                                 }
 
                                 if (candidate->op() == PhantomNewArrayBuffer)
-                                    return candidate->castOperand<JSImmutableButterfly*>()->length();
+                                    return candidate->castOperand<JSFixedArray*>()->length();
 
                                 ASSERT(candidate->op() == PhantomCreateRest);
                                 unsigned numberOfArgumentsToSkip = candidate->numberOfArgumentsToSkip();
@@ -910,7 +910,7 @@ private:
                                     }
 
                                     if (candidate->op() == PhantomNewArrayBuffer) {
-                                        auto* array = candidate->castOperand<JSImmutableButterfly*>();
+                                        auto* array = candidate->castOperand<JSFixedArray*>();
                                         for (unsigned index = 0; index < array->length(); ++index) {
                                             JSValue constant;
                                             if (candidate->indexingType() == ArrayWithDouble)
@@ -1127,7 +1127,7 @@ private:
 
                                 if (candidate->op() == PhantomNewArrayBuffer) {
                                     bool canExit = true;
-                                    auto* array = candidate->castOperand<JSImmutableButterfly*>();
+                                    auto* array = candidate->castOperand<JSFixedArray*>();
                                     for (unsigned index = 0; index < array->length(); ++index) {
                                         JSValue constant;
                                         if (candidate->indexingType() == ArrayWithDouble)
