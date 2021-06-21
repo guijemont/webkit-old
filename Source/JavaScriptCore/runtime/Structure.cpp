@@ -1188,7 +1188,7 @@ void Structure::dump(PrintStream& out) const
             return true;
         });
     
-    out.print("}, ", IndexingTypeDump(indexingMode()));
+    out.print("}, ", IndexingTypeDump(indexingType()));
     
     if (hasPolyProto())
         out.print(", PolyProto offset:", knownPolyProtoOffset);
