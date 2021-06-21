@@ -121,10 +121,10 @@ void JSArray::eagerlyInitializeButterfly(ObjectInitializationScope& scope, JSArr
     if (LIKELY(!hasAnyArrayStorage(indexingType))) {
         if (hasDouble(indexingType)) {
             for (unsigned i = 0; i < initialLength; ++i)
-                butterfly->contiguousDouble().atUnsafe(i) = PNaN;
+                butterfly->contiguousDouble().at(i) = PNaN;
         } else {
             for (unsigned i = 0; i < initialLength; ++i)
-                butterfly->contiguous().atUnsafe(i).clear();
+                butterfly->contiguous().at(i).clear();
         }
     } else {
         ArrayStorage* storage = butterfly->arrayStorage();

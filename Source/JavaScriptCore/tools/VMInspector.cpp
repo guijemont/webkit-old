@@ -411,7 +411,6 @@ void VMInspector::dumpCellMemoryToStream(JSCell* cell, PrintStream& out)
     Structure* structure = cell->structure(vm);
     IndexingType indexingTypeAndMisc = cell->indexingTypeAndMisc();
     IndexingType indexingType = structure->indexingType();
-    IndexingType indexingMode = structure->indexingMode();
     JSType type = cell->type();
     TypeInfo::InlineTypeFlags inlineTypeFlags = cell->inlineTypeFlags();
     CellState cellState = cell->cellState();
@@ -442,7 +441,7 @@ void VMInspector::dumpCellMemoryToStream(JSCell* cell, PrintStream& out)
     {
         IndentationScope scope(indentation);
         INDENT out.println("structureID ", format("%d 0x%" PRIx32, structureID, structureID), " structure ", RawPointer(structure));
-        INDENT out.println("indexingTypeAndMisc ", format("%d 0x%" PRIx8, indexingTypeAndMisc, indexingTypeAndMisc), " ", IndexingTypeDump(indexingMode));
+        INDENT out.println("indexingTypeAndMisc ", format("%d 0x%" PRIx8, indexingTypeAndMisc, indexingTypeAndMisc), " ", IndexingTypeDump(indexingType));
         INDENT out.println("type ", format("%d 0x%" PRIx8, type, type));
         INDENT out.println("flags ", format("%d 0x%" PRIx8, inlineTypeFlags, inlineTypeFlags));
         INDENT out.println("cellState ", format("%d", cellState));
