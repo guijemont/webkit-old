@@ -72,7 +72,9 @@ DisplayRefreshMonitor::~DisplayRefreshMonitor() = default;
 void DisplayRefreshMonitor::handleDisplayRefreshedNotificationOnMainThread(void* data)
 {
     DisplayRefreshMonitor* monitor = static_cast<DisplayRefreshMonitor*>(data);
+    auto start = MonotonicTime::now();
     monitor->displayDidRefresh();
+    dataLogLn("Period ", (MonotonicTime::now()-start).milliseconds());
 }
 
 void DisplayRefreshMonitor::addClient(DisplayRefreshMonitorClient& client)
