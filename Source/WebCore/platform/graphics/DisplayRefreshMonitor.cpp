@@ -28,6 +28,7 @@
 
 #if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)
 
+#include "CommonVM.h"
 #include "DisplayRefreshMonitorClient.h"
 #include "DisplayRefreshMonitorManager.h"
 #include "Logging.h"
@@ -39,6 +40,8 @@
 #elif PLATFORM(GTK)
 #include "DisplayRefreshMonitorGtk.h"
 #endif
+
+#include <JavaScriptCore/SamplingProfiler.h>
 
 namespace WebCore {
 
@@ -72,9 +75,35 @@ DisplayRefreshMonitor::~DisplayRefreshMonitor() = default;
 void DisplayRefreshMonitor::handleDisplayRefreshedNotificationOnMainThread(void* data)
 {
     DisplayRefreshMonitor* monitor = static_cast<DisplayRefreshMonitor*>(data);
-    auto start = MonotonicTime::now();
+    JSC::SamplingProfiler& samplingProfiler = commonVM().ensureSamplingProfiler(WTF::Stopwatch::create());
+    samplingProfiler.noticeCurrentThreadAsJSCExecutionThread();
+
+    samplingProfiler.start();
+    MonotonicTime start = MonotonicTime::now();
+
     monitor->displayDidRefresh();
-    dataLogLn("Period ", (MonotonicTime::now()-start).milliseconds());
+
+    MonotonicTime end = MonotonicTime::now();
+
+    {
+        LockHolder locker(samplingProfiler.getLock());
+        samplingProfiler.pause(locker);
+    }
+
+    Seconds duration = end - start;
+    dataLogLn("Period ", duration.milliseconds());
+    if (duration.seconds() > (1.0/60.0)) {
+        dataLogLn("Functions:");
+        samplingProfiler.reportTopFunctions();
+        dataLogLn("END");
+        dataLogLn("Bytecodes:");
+        samplingProfiler.reportTopBytecodes();
+        dataLogLn("END");
+    }
+    {
+        LockHolder locker(samplingProfiler.getLock());
+        samplingProfiler.clearData(locker);
+    }
 }
 
 void DisplayRefreshMonitor::addClient(DisplayRefreshMonitorClient& client)
