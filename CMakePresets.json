@@ -1,0 +1,30 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "jsconly-clang-15",
+            "displayName": "jsconly using clang-15",
+            "description": "jsconly Release clang-15 build",
+            "binaryDir": "${sourceDir}/WebKitBuild/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/clang-15",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-15",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "PORT": "JSCOnly"
+            }
+        },
+        {
+            "name": "jsconly-clang-15-debug",
+            "description": "jsconly Debug clang-15 build",
+            "displayName": "jsconly Debug using clang-15",
+            "inherits": [
+                "jsconly-clang-15"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ]
+}
