@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "DFGArgumentsUtilities.h"
+#include "JSImmutableButterfly.h"
 
 #if ENABLE(DFG_JIT)
 

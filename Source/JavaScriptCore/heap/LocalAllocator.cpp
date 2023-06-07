@@ -27,8 +27,11 @@
 #include "LocalAllocator.h"
 
 #include "AllocatingScope.h"
+#include "GCDeferralContext.h"
+#include "HeapCell.h"
 #include "LocalAllocatorInlines.h"
 #include "Options.h"
+#include "SuperSampler.h"
 
 namespace JSC {
 
@@ -231,7 +234,7 @@ void* LocalAllocator::tryAllocateIn(MarkedBlock::Handle* block)
     
     m_currentBlock = block;
     
-    void* result = m_freeList.allocate(
+    void* result = m_freeList.allocate<HeapCell* (*)(void)>(
         [] () -> HeapCell* {
             RELEASE_ASSERT_NOT_REACHED();
             return nullptr;

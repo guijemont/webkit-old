@@ -29,6 +29,7 @@
 #if ENABLE(WEBASSEMBLY)
 
 #include "JSDestructibleObject.h"
+#include "JSPromiseDeferred.h"
 #include "JSObject.h"
 
 namespace JSC {

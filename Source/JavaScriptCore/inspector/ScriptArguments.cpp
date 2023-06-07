@@ -36,6 +36,8 @@
 #include "JSCInlines.h"
 #include "ProxyObject.h"
 
+using namespace JSC;
+
 namespace Inspector {
 
 Ref<ScriptArguments> ScriptArguments::create(JSC::ExecState& state, Vector<JSC::Strong<JSC::Unknown>>&& arguments)

@@ -26,6 +26,11 @@
 #pragma once
 
 #include "AlignedMemoryAllocator.h"
+#include "MarkedBlock.h"
+#include <wtf/FastBitVector.h>
+#include <wtf/HashMap.h>
+#include <wtf/Lock.h>
+#include <wtf/Vector.h>
 
 namespace JSC {
 

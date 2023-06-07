@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "DFGCFAPhase.h"
+#include "DFGClobberize.h"
 
 #if ENABLE(DFG_JIT)
 

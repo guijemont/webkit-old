@@ -38,12 +38,14 @@
 #include "JSFunction.h"
 #include "JSLexicalEnvironment.h"
 #include "LinkBuffer.h"
+#include "MacroAssemblerCodeRef.h"
 #include "OpcodeInlines.h"
 #include "ResultType.h"
 #include "ScopedArguments.h"
 #include "ScopedArgumentsTable.h"
 #include "SlowPathCall.h"
 #include "StructureStubInfo.h"
+#include "ThunkGenerators.h"
 #include <wtf/ScopedLambda.h>
 #include <wtf/StringPrintStream.h>
 

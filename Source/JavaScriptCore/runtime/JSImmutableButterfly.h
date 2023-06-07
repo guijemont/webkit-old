@@ -25,8 +25,12 @@
 
 #pragma once
 
+#include "Butterfly.h"
 #include "IndexingHeader.h"
 #include "JSCell.h"
+#include "Structure.h"
+#include "VirtualRegister.h"
+#include "VM.h"
 
 namespace JSC {
 

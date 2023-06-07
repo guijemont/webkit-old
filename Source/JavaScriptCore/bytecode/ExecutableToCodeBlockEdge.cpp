@@ -26,7 +26,9 @@
 #include "config.h"
 #include "ExecutableToCodeBlockEdge.h"
 
+#include "CodeBlock.h"
 #include "IsoCellSetInlines.h"
+#include "SlotVisitor.h"
 
 namespace JSC {
 

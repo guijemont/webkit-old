@@ -26,6 +26,7 @@
 #pragma once
 
 #include "LocalAllocator.h"
+#include "VM.h"
 
 namespace JSC {
 

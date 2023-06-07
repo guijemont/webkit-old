@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include "CodeBlock.h"
 #include "ExitFlag.h"
+#include "StructureSet.h"
 
 namespace JSC {
 

@@ -28,6 +28,13 @@
 
 #include <unicode/utext.h>
 
+#ifndef TRUE
+#define TRUE true
+#endif
+
+#ifndef FALSE
+#define FALSE false
+#endif
 namespace WTF {
 
 enum class UTextProviderContext {
