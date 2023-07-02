@@ -45,6 +45,7 @@
 #include <wtf/HashCountedSet.h>
 #include <wtf/HashSet.h>
 #include <wtf/ParallelHelperPool.h>
+#include <wtf/StackTrace.h>
 #include <wtf/Threading.h>
 
 namespace JSC {
@@ -557,6 +558,10 @@ private:
 
     static bool useGenerationalGC();
     static bool shouldSweepSynchronously();
+
+    void captureDebugStackTrace();
+
+    void dumpDebugStackTrace();
     
     const HeapType m_heapType;
     const size_t m_ramSize;
@@ -724,6 +729,7 @@ private:
     
     CurrentThreadState* m_currentThreadState { nullptr };
     WTF::Thread* m_currentThread { nullptr }; // It's OK if this becomes a dangling pointer.
+    std::unique_ptr<StackTrace> m_lastDebugStackTrace;
 };
 
 } // namespace JSC

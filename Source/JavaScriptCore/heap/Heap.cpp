@@ -1132,7 +1132,13 @@ void Heap::checkConn(GCConductor conn)
         RELEASE_ASSERT(worldState & mutatorHasConnBit, worldState, asInt(m_lastPhase), asInt(m_currentPhase), asInt(m_nextPhase), vm()->id(), VM::numberOfIDs(), vm()->isEntered());
         return;
     case GCConductor::Collector:
-        RELEASE_ASSERT(!(worldState & mutatorHasConnBit), worldState, asInt(m_lastPhase), asInt(m_currentPhase), asInt(m_nextPhase), vm()->id(), VM::numberOfIDs(), vm()->isEntered());
+        if (!(worldState & mutatorHasConnBit)) {
+            dataLog('JSC::Heap::checkConn failing:', worldState,
+                asInt(m_lastPhase), asInt(m_currentPhase), asInt(m_nextPhase),
+                vm()->id(), VM::numberOfIDs(), vm()->isEntered());
+            dumpDebugStackTrace();
+            RELEASE_ASSERT_NOT_REACHED();
+        }
         return;
     }
     RELEASE_ASSERT_NOT_REACHED();
@@ -1699,6 +1705,7 @@ bool Heap::stopTheMutator()
         RELEASE_ASSERT(oldState & hasAccessBit);
         RELEASE_ASSERT(!(oldState & stoppedBit));
         unsigned newState = (oldState | mutatorHasConnBit) & ~mutatorWaitingBit;
+        captureDebugStackTrace();
         if (m_worldState.compareExchangeWeak(oldState, newState)) {
             if (false)
                 dataLog("Handed off the conn.\n");
@@ -1896,6 +1903,7 @@ void Heap::releaseAccessSlow()
             newState |= stoppedBit;
         }
 
+        m_lastDebugStackTrace.reset();
         if (m_worldState.compareExchangeWeak(oldState, newState)) {
             if (oldState & mutatorHasConnBit)
                 finishRelinquishingConn();
@@ -1914,7 +1922,8 @@ bool Heap::relinquishConn(unsigned oldState)
     
     if (m_threadShouldStop)
         return false;
-    
+
+    m_lastDebugStackTrace.reset();
     if (!m_worldState.compareExchangeWeak(oldState, oldState & ~mutatorHasConnBit))
         return true; // Loop around.
     
@@ -2074,6 +2083,7 @@ Heap::Ticket Heap::requestCollection(GCRequest request)
     if ((m_lastServedTicket == m_lastGrantedTicket) && (m_currentPhase == CollectorPhase::NotRunning)) {
         if (false)
             dataLog("Taking the conn.\n");
+        captureDebugStackTrace();
         m_worldState.exchangeOr(mutatorHasConnBit);
     }
     
@@ -2914,5 +2924,19 @@ void Heap::runTaskInParallel(RefPtr<SharedTask<void(SlotVisitor&)>> task)
             m_markingConditionVariable.wait(m_markingMutex);
     }
 }
+
+void Heap::captureDebugStackTrace() {
+    m_lastDebugStackTrace = StackTrace::captureStackTrace(100);
+}
+
+void Heap::dumpDebugStackTrace() {
+    if (m_lastDebugStackTrace) {
+        dataLogLn("Last stack trace saved:");
+        m_lastDebugStackTrace->dump(WTF::dataFile(), "  ");
+    } else {
+            dataLogLn("No stack trace saved");
+    }
+}
+
 
 } // namespace JSC
