@@ -104,3 +104,8 @@ else ()
     add_definitions(-DU_DISABLE_RENAMING=1 -DU_SHOW_CPLUSPLUS_API=0)
     set(ICU_LIBRARIES libicucore.dylib)
 endif ()
+
+if  (CMAKE_COMPILER_IS_GNUCC AND WTF_CPU_ARM)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}${CMAKE_COMPILER_SIZE_OPT_FLAGS} -fasynchronous-unwind-tables")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_COMPILER_SIZE_OPT_FLAGS} -fasynchronous-unwind-tables")
+endif ()
