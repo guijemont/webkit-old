@@ -393,7 +393,7 @@ constexpr bool enableWebAssemblyStreamingApi = false;
     v(bool, sweepSynchronously, false, Normal, "debugging option to sweep all dead objects synchronously at GC end before resuming mutator") \
     v(unsigned, maxSingleAllocationSize, 0, Configurable, "debugging option to limit individual allocations to a max size (0 = limit not set, N = limit size in bytes)") \
     \
-    v(gcLogLevel, logGC, GCLogging::None, Normal, "debugging option to log GC activity (0 = None, 1 = Basic, 2 = Verbose)") \
+    v(gcLogLevel, logGC, GCLogging::Verbose, Normal, "debugging option to log GC activity (0 = None, 1 = Basic, 2 = Verbose)") \
     v(bool, useGC, true, Normal, nullptr) \
     v(bool, gcAtEnd, false, Normal, "If true, the jsc CLI will do a GC before exiting") \
     v(bool, forceGCSlowPaths, false, Normal, "If true, we will force all JIT fast allocations down their slow paths.") \
